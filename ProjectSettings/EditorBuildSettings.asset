@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/StartScene.unity
+    guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/IntroScene.unity
+    guid: ad8ccaeb3e23d4cc895711266f592d1e
+  - enabled: 1
+    path: Assets/Scenes/JoinGameScene.unity
+    guid: f59ec82e84de0457699715633c1ccaaa
+  - enabled: 1
+    path: Assets/Scenes/GameScene.unity
+    guid: 755753284404445aaac5c55c16ee21f2
+  - enabled: 1
+    path: Assets/Scenes/GameStart.unity
+    guid: 50a11fb376e6343c59fa0e0db81582d9
+  - enabled: 1
+    path: Assets/Scenes/MissionSelect.unity
+    guid: fb2c474bb08b74bef86e4bea9f954117
+  - enabled: 1
+    path: Assets/Scenes/Fingerprint.unity
+    guid: ea70c53b9603e4fd29957a0df56d7396
+  - enabled: 1
+    path: Assets/Scenes/SpotsHunt.unity
+    guid: 890a619af4ade4340b8f2c96b12d0375
+  - enabled: 1
+    path: Assets/Scenes/RandomQuiz.unity
+    guid: 049d558c9c965415ab15688a58881187
+  - enabled: 1
+    path: Assets/Scenes/RightSigns.unity
+    guid: 5738b46c4a09b41cabbe26dd97620f35
+  - enabled: 1
+    path: Assets/Scenes/FindtheWay.unity
+    guid: 684c613baf6c1467e98f4b862dea1904
+  m_configObjects:
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: bbe5a33196c664e50905a759422f9477, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 2046dcfd83c78455ba9a7ba4b1b40e15, type: 2}
