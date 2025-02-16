@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Photon.Pun;
 
 public class SpotDifference : MonoBehaviour
 {
@@ -15,7 +16,13 @@ public class SpotDifference : MonoBehaviour
         public float roundTimer = 40f;
     }
 
-    public List<RoundData> rounds;
+    [System.Serializable]
+    public class PuzzleSet
+    {
+        public List<RoundData> rounds;
+    }
+
+    public List<PuzzleSet> puzzleSets;
     public Image topImage;
     public Image bottomImage;
     public TMP_Text timerText;
@@ -24,7 +31,8 @@ public class SpotDifference : MonoBehaviour
     public TMP_Text startText;
 
     private int currentRound = 0;
-    private float timer;
+    private int currentPuzzleSetIndex = 0;
+    private float totalTime;
     private bool isTimerRunning = false;
     private bool isGameActive = false;
     private int differencesFound = 0;
@@ -33,7 +41,21 @@ public class SpotDifference : MonoBehaviour
 
     void Start()
     {
-        foreach (var round in rounds)
+        // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
+        PhotonNetwork.AutomaticallySyncScene = false;
+
+        // สุ่มชุดโจทย์
+        currentPuzzleSetIndex = Random.Range(0, puzzleSets.Count);
+        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+
+        totalTime = 0;
+        foreach (var round in selectedPuzzleSet.rounds)
+        {
+            totalTime += round.roundTimer;
+        }
+
+        // ซ่อนปุ่มที่เคยเลือกไว้
+        foreach (var round in selectedPuzzleSet.rounds)
         {
             foreach (var point in round.differencePoints)
             {
@@ -48,14 +70,14 @@ public class SpotDifference : MonoBehaviour
     {
         if (isRoundActive)
         {
-            timer -= Time.deltaTime;
-            if (timer <= 0)
+            totalTime -= Time.deltaTime;
+            if (totalTime <= 0)
             {
-                timer = 0;
+                totalTime = 0;
                 isTimerRunning = false;
-                EndRound(false);
+                EndGame(false);
             }
-            timerText.text = $"Time: {Mathf.CeilToInt(timer)}s";
+            timerText.text = $"Time: {Mathf.CeilToInt(totalTime)}s";
         }
     }
 
@@ -75,37 +97,37 @@ public class SpotDifference : MonoBehaviour
 
         startText.gameObject.SetActive(false);
         isGameActive = true;
+        isTimerRunning = true;
         StartRound(0);
     }
 
     public void StartRound(int roundIndex)
     {
         ResetPreviousRound();
-
+        
+        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
         currentRound = roundIndex;
 
-        topImage.sprite = rounds[roundIndex].topImage;
-        bottomImage.sprite = rounds[roundIndex].bottomImage;
+        topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+        bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].bottomImage;
 
         // แสดงปุ่มจุดต่าง
-        foreach (var point in rounds[roundIndex].differencePoints)
+        foreach (var point in selectedPuzzleSet.rounds[roundIndex].differencePoints)
         {
             point.gameObject.SetActive(true);
         }
 
         differencesFound = 0;
-        timer = rounds[roundIndex].roundTimer;
-        isTimerRunning = true;
-        isGameActive = true;
-        roundText.text = $"Round: {roundIndex + 1}/{rounds.Count}";
+        roundText.text = $"Round: {roundIndex + 1}/{selectedPuzzleSet.rounds.Count}";
         messageText.text = "";
     }
 
     private void ResetPreviousRound()
     {
-        if (currentRound < rounds.Count)
+        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+        if (currentRound < selectedPuzzleSet.rounds.Count)
         {
-            foreach (var point in rounds[currentRound].differencePoints)
+            foreach (var point in selectedPuzzleSet.rounds[currentRound].differencePoints)
             {
                 ConfigureButton(point);
             }
@@ -124,41 +146,52 @@ public class SpotDifference : MonoBehaviour
         if (!isGameActive) return;
 
         differencesFound++;
-        Debug.Log($"Round {currentRound + 1}: Difference found ({differencesFound}/{rounds[currentRound].differencePoints.Count})");
+        Debug.Log($"Round {currentRound + 1}: Difference found ({differencesFound}/{puzzleSets[currentPuzzleSetIndex].rounds[currentRound].differencePoints.Count})");
 
-        if (differencesFound >= rounds[currentRound].differencePoints.Count)
-        {
-            EndRound(true);
-        }
-    }
-
-    void EndRound(bool isSuccess)
-    {
-        isTimerRunning = false;
-        isGameActive = false;
-
-        if (isSuccess)
+        if (differencesFound >= puzzleSets[currentPuzzleSetIndex].rounds[currentRound].differencePoints.Count)
         {
             messageText.text = "Success!";
-            Invoke(nameof(NextRound), 2f); // ไปยังรอบถัดไปหลังจาก 2 วินาที
-        }
-        else
-        {
-            messageText.text = "Failed!";
+            Invoke(nameof(NextRound), 2f);
         }
     }
 
     void NextRound()
     {
-        if (currentRound + 1 < rounds.Count)
+        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+
+        if (currentRound + 1 < selectedPuzzleSet.rounds.Count)
         {
             StartRound(currentRound + 1);
         }
         else
         {
-            messageText.text = "Mission Complete!";
-            // สามารถเพิ่มการสรุปคะแนน หรือย้ายไป Scene อื่นได้
+            EndGame(true);
         }
+    }
+
+    void EndGame(bool isSuccess)
+    {
+        isTimerRunning = false;
+        isGameActive = false;
+        
+        messageText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
+        
+        string playerName = PhotonNetwork.NickName;
+        string missionKey = "Mission_SpotDifference";
+        string missionResult = isSuccess ? "Complete" : "Fail";
+
+        ExitGames.Client.Photon.Hashtable playerResults = new ExitGames.Client.Photon.Hashtable()
+        {
+            { $"{missionKey}_{playerName}", missionResult }
+        };
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
+        Invoke("ChangeToWaitingScene", 2f);
+    }
+    
+    void ChangeToWaitingScene()
+    {
+        PhotonNetwork.LoadLevel("WaitingScene");
     }
 
     public bool IsGameActive()

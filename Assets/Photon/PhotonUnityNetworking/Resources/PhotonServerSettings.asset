@@ -41,6 +41,7 @@ MonoBehaviour:
   - RespawnSpaceship
   - EmployerActionComplete
   - VillainActionComplete
+  - ChangeToWaitingScene
   DisableAutoOpenWizard: 1
-  ShowSettings: 0
+  ShowSettings: 1
   DevRegionSetOnce: 1
