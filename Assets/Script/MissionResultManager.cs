@@ -4,9 +4,9 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 
-public class SpotsHuntSetting : MonoBehaviourPunCallbacks
+public class MissionResultManager : MonoBehaviourPunCallbacks
 {
-    public static SpotsHuntSetting Instance;
+    public static MissionResultManager Instance;
 
     private void Awake()
     {
@@ -23,12 +23,14 @@ public class SpotsHuntSetting : MonoBehaviourPunCallbacks
     public void CalculateMissionResult(string missionKey)
     {
         if (!PhotonNetwork.IsMasterClient) return;
+        if (missionKey != "Mission_SpotDifference" && missionKey != "Mission_FindTheWay") { return; }
 
         int totalPlayers = PhotonNetwork.PlayerList.Length;
         int successThreshold = Mathf.CeilToInt(totalPlayers / 2f);
         int successCount = CountSuccessfulPlayers(missionKey);
 
         bool missionPassed = successCount >= successThreshold;
+        Debug.Log($"{missionKey} result: {(missionPassed ? "Mission Passed" : "Mission Failed")}");
 
         ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable
         {

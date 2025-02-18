@@ -184,8 +184,17 @@ public class SpotDifference : MonoBehaviour
         {
             { $"{missionKey}_{playerName}", missionResult }
         };
-
         PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
+            {
+                { "CurrentMission", missionKey }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
+        }
+
         Invoke("ChangeToWaitingScene", 2f);
     }
     

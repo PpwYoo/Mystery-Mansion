@@ -41,7 +41,18 @@ public class WaitingScene : MonoBehaviour
             {
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    SpotsHuntSetting.Instance.CalculateMissionResult("Mission_SpotDifference");
+                    if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("CurrentMission", out object missionKey))
+                    {
+                        Debug.Log($"Current Mission: {missionKey}");
+                        string missionName = missionKey.ToString();
+                        MissionResultManager.Instance.CalculateMissionResult(missionName);
+
+                        ExitGames.Client.Photon.Hashtable roomProps = new ExitGames.Client.Photon.Hashtable
+                        {
+                            { "LastMission", missionName }
+                        };
+                        PhotonNetwork.CurrentRoom.SetCustomProperties(roomProps);
+                    }
                 }
 
                 Invoke("ChangeToNextScene", 2f);

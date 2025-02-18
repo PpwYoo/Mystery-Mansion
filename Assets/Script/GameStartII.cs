@@ -14,6 +14,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public RectTransform[] playerPositions;
     private List<GameObject> currentPlayers = new List<GameObject>();
 
+    [Header("Mission Setting")]
     public Image[] missionResultImages;
     public Sprite successSprite;
     public Sprite failSprite;
@@ -22,7 +23,16 @@ public class GameStartII : MonoBehaviourPunCallbacks
     void Start()
     {
         SetupPlayers();
-        ShowMissionResult("Mission_SpotDifference");
+        
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("LastMission", out object lastMissionKey))
+        {
+            Debug.Log($"Last Mission: {lastMissionKey}");
+            ShowMissionResult((string)lastMissionKey);
+        }
+        else
+        {
+            messageText.text = "ยังไม่มีผลภารกิจ";
+        }
     }
 
     void SetupPlayers()
@@ -103,6 +113,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
         {
             bool isMissionSuccess = (bool)result;
             messageText.text = isMissionSuccess ? "ภารกิจสำเร็จ" : "ภารกิจล้มเหลว";
+            Debug.Log($"{missionKey} result: {(isMissionSuccess ? "Success" : "Fail")}");
 
             if (missionIndex < missionResultImages.Length)
             {
@@ -121,6 +132,11 @@ public class GameStartII : MonoBehaviourPunCallbacks
         if (propertiesThatChanged.ContainsKey("Result_Mission_SpotDifference"))
         {
             ShowMissionResult("Mission_SpotDifference");
+        }
+
+        if (propertiesThatChanged.ContainsKey("Result_Mission_FindTheWay"))
+        {
+            ShowMissionResult("Mission_FindTheWay");
         }
     }
 }

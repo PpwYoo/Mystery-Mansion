@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Photon.Pun;
 
 public class FindTheWaySetting : MonoBehaviour
 {
@@ -20,10 +21,13 @@ public class FindTheWaySetting : MonoBehaviour
     private Vector2 goalPosition;
     private Vector2[] trapPositions;
 
-    private int gridSize = 7; // จำนวนช่องในเกมมันจะ -1
+    private int gridSize = 5;
 
     void Start()
     {
+        // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
+        PhotonNetwork.AutomaticallySyncScene = false;
+        
         currentGridPosition = new Vector2(0,0);
         SetupButtons();
         StartGame();
@@ -131,21 +135,69 @@ public class FindTheWaySetting : MonoBehaviour
 
         // สุ่มตำแหน่งกับดัก
         Vector2[] traps = new Vector2[numberOfTraps];
-        for (int i = 0; i < traps.Length; i++)
-        {
-            traps[i] = new Vector2(Random.Range(0, gridSize), Random.Range(0, gridSize));
+        bool trapsValid = false;
 
-            while (traps[i] == goal || traps[i] == new Vector2(0, 0) || IsDuplicateTrap(traps, traps[i], i))
+        while (!trapsValid)
+        {
+            traps = new Vector2[numberOfTraps];
+
+            for (int i = 0; i < traps.Length; i++)
             {
                 traps[i] = new Vector2(Random.Range(0, gridSize), Random.Range(0, gridSize));
+
+                while (traps[i] == goal || traps[i] == new Vector2(0, 0) || IsDuplicateTrap(traps, traps[i], i))
+                {
+                    traps[i] = new Vector2(Random.Range(0, gridSize), Random.Range(0, gridSize));
+                }
             }
-            Debug.Log(traps[i]);
+            trapsValid = CheckIfPathIsValid(traps, goal);
         }
 
         SetTrapPositions(traps);
         SetGoalPosition(goal);
 
         Invoke(nameof(ActivateRound), 0f);
+    }
+
+    bool CheckIfPathIsValid(Vector2[] traps, Vector2 goal)
+    {
+        bool[,] grid = new bool[gridSize, gridSize];
+        
+        foreach (var trap in traps)
+        {
+            grid[(int)trap.x, (int)trap.y] = true;
+        }
+
+        // ใช้ BFS ค้นหาเส้นทาง
+        Queue<Vector2> queue = new Queue<Vector2>();
+        bool[,] visited = new bool[gridSize, gridSize];
+
+        queue.Enqueue(new Vector2(0, 0));
+        visited[0, 0] = true;
+
+        Vector2[] directions = { Vector2.right, Vector2.left, Vector2.up, Vector2.down };
+
+        while (queue.Count > 0)
+        {
+            Vector2 current = queue.Dequeue();
+            
+            if (current == goal)
+            {
+                return true; // มีเส้นทางไปถึงเป้าหมาย
+            }
+            
+            foreach (var dir in directions)
+            {
+                Vector2 newPos = current + dir;
+                
+                if (newPos.x >= 0 && newPos.x < gridSize && newPos.y >= 0 && newPos.y < gridSize && !grid[(int)newPos.x, (int)newPos.y] && !visited[(int)newPos.x, (int)newPos.y])
+                {
+                    queue.Enqueue(newPos);
+                    visited[(int)newPos.x, (int)newPos.y] = true;
+                }
+            }
+        }
+        return false; // ไม่มีเส้นทางไปถึงเป้าหมาย
     }
 
     bool IsDuplicateTrap(Vector2[] traps, Vector2 newTrap, int currentIndex)
@@ -221,18 +273,44 @@ public class FindTheWaySetting : MonoBehaviour
         messageText.text = "";
     }
 
-    void EndGame(bool isWin)
+    void EndGame(bool isSuccess)
     {
         isGameActive = false;
 
         playerUI.gameObject.SetActive(false);
         goalImage.gameObject.SetActive(false);
 
-        messageText.text = isWin ? "Success!" : "Fail!";
+        messageText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
+
+        string playerName = PhotonNetwork.NickName;
+        string missionKey = "Mission_FindTheWay";
+        string missionResult = isSuccess ? "Complete" : "Fail";
+
+        ExitGames.Client.Photon.Hashtable playerResults = new ExitGames.Client.Photon.Hashtable()
+        {
+            { $"{missionKey}_{playerName}", missionResult }
+        };
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
+            {
+                { "CurrentMission", missionKey }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
+        }
+
+        Invoke("ChangeToWaitingScene", 2f);
     }
 
     void UpdateTimerUI()
     {
         timerText.text = $"{Mathf.CeilToInt(totalGameTime)}s";
+    }
+
+    void ChangeToWaitingScene()
+    {
+        PhotonNetwork.LoadLevel("WaitingScene");
     }
 }
