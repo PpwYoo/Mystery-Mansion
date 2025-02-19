@@ -1,0 +1,330 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+public class SymbolSpawner : MonoBehaviour
+{
+    public GameObject symbolPrefab;
+    public Sprite[] allSymbols;
+    public Sprite[] framedSymbols;
+    public TMP_Text instructionText;
+    public TMP_Text timerText;
+    public TMP_Text roundText;
+
+    public GameObject selectionPanel;
+    public TMP_Text selectionTimerText;
+    public TMP_Text selectionRoundText;
+    public TMP_Text selectionQText;
+    public Transform selectionGrid;
+    public Button confirmButton;
+
+    public GameObject greenOverlayPanel;
+    public float greenOverlayDisplayTime = 2f;
+    public GameObject redOverlayPanel;
+    public GameObject finishedPanel;
+
+    private List<GameObject> spawnedSymbols = new List<GameObject>();
+    private List<Sprite> symbolsToRememberSprites = new List<Sprite>();
+    private List<GameObject> selectedSymbols = new List<GameObject>();
+
+    private int round = 1;
+    private int maxRounds = 5;
+    private float memorizeTime;
+    private float selectionTime = 25f;
+
+    // Start & Main Coroutine
+    void Start()
+    {
+        confirmButton.onClick.AddListener(OnConfirmSelection);
+        StartCoroutine(StartGame());
+    }
+
+    IEnumerator StartGame()
+    {
+        while (round <= maxRounds)
+        {
+            yield return StartCoroutine(StartRound());
+        }
+
+        ShowMissionCompleted();
+    }
+
+    // Round Management
+    IEnumerator StartRound()
+    {
+        memorizeTime = 5 + round; // Reset Memorization Time
+
+        // Show Memorization Panel
+        timerText.gameObject.SetActive(true);
+        instructionText.gameObject.SetActive(true);
+        roundText.gameObject.SetActive(true);
+        roundText.text = $"{round}/{maxRounds}";
+
+        // Clear Previous Symbols
+        foreach (var symbol in spawnedSymbols)
+        {
+            Destroy(symbol);
+        }
+        spawnedSymbols.Clear();
+
+        // Generate New Symbols
+        List<int> randomIndexes = Enumerable.Range(0, allSymbols.Length)
+                                            .OrderBy(x => Random.value)
+                                            .Take(9)
+                                            .ToList();
+
+        foreach (int index in randomIndexes)
+        {
+            GameObject newSymbol = Instantiate(symbolPrefab, transform);
+            newSymbol.GetComponent<Image>().sprite = allSymbols[index];
+            spawnedSymbols.Add(newSymbol);
+            newSymbol.SetActive(true);
+        }
+
+        // Select Symbols to Remember
+        int memorizeCount = round + 1;
+        List<GameObject> symbolsToRemember = spawnedSymbols.OrderBy(x => Random.value)
+                                                           .Take(memorizeCount)
+                                                           .ToList();
+
+        symbolsToRememberSprites.Clear();
+        foreach (GameObject symbol in symbolsToRemember)
+        {
+            Image img = symbol.GetComponent<Image>();
+            int index = System.Array.IndexOf(allSymbols, img.sprite);
+            if (index != -1)
+            {
+                img.sprite = framedSymbols[index];
+                symbolsToRememberSprites.Add(framedSymbols[index]);
+            }
+        }
+
+        // Update Instruction Text to include number of symbols to memorize
+        instructionText.text = $"สัญลักษณ์รอบนี้มี {memorizeCount} ตัว\nจดจำสัญลักษณ์ไว้ให้ดี!!";
+
+        // Start Memorization Timer
+        yield return StartCoroutine(CountdownTimer(memorizeTime));
+
+        // Hide Memorization Panel and Show Selection
+        roundText.gameObject.SetActive(false);
+        instructionText.text = "";
+        ShowSelectionPanel();
+    }
+
+    IEnumerator CountdownTimer(float time)
+{
+    float remainingTime = time;
+
+    while (remainingTime > 0)
+    {
+        // แปลงเวลาที่เหลือเป็นนาทีและวินาที
+        int minutes = Mathf.FloorToInt(remainingTime / 60);
+        int seconds = Mathf.FloorToInt(remainingTime % 60);
+
+        // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
+        timerText.text = $"{minutes:D2}:{seconds:D2}";
+
+        yield return new WaitForSeconds(1f);
+        remainingTime -= 1f;
+    }
+
+    timerText.text = "00:00"; // แสดง 00:00 เมื่อหมดเวลา
+}
+
+    void ShowSelectionPanel()
+    {
+        StopAllCoroutines(); // Stop All Coroutines
+
+        // Hide Memorization Panel
+        timerText.gameObject.SetActive(false);
+        instructionText.gameObject.SetActive(false);
+        foreach (var symbol in spawnedSymbols)
+        {
+            symbol.SetActive(false);
+        }
+
+        // Configure Selection Panel
+        selectionRoundText.text = $"{round}/{maxRounds}";
+        selectionPanel.SetActive(true);
+        selectionGrid.gameObject.SetActive(true);
+
+        // Clear Old Symbols in Selection Grid
+        foreach (Transform child in selectionGrid)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Generate New Selection Symbols
+        List<Sprite> selectionSprites = new List<Sprite>(symbolsToRememberSprites.Select(x => allSymbols[System.Array.IndexOf(framedSymbols, x)]));
+        selectionSprites.AddRange(allSymbols.Except(selectionSprites).OrderBy(x => Random.value).Take(9 - selectionSprites.Count));
+        selectionSprites = selectionSprites.OrderBy(x => Random.value).ToList();
+
+        foreach (Sprite sprite in selectionSprites)
+        {
+            GameObject newSymbol = Instantiate(symbolPrefab, selectionGrid);
+            newSymbol.GetComponent<Image>().sprite = sprite;
+
+            Button button = newSymbol.GetComponent<Button>();
+            button.onClick.AddListener(() => OnSymbolSelected(newSymbol, sprite));
+        }
+
+        // Start Selection Timer
+        selectedSymbols.Clear();
+        StartCoroutine(SelectionCountdown(selectionTime));
+    }
+
+    IEnumerator SelectionCountdown(float time)
+{
+    while (time > 0)
+    {
+        // แปลงเวลาที่เหลือเป็นนาทีและวินาที
+        int minutes = Mathf.FloorToInt(time / 60);
+        int seconds = Mathf.FloorToInt(time % 60);
+
+        // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
+        selectionTimerText.text = $"{minutes:D2}:{seconds:D2}";
+
+        yield return new WaitForSeconds(1f);
+        time -= 1f;
+
+        // หากคำตอบถูกต้องก่อนหมดเวลา
+        if (greenOverlayPanel.activeSelf)
+        {
+            yield break;
+        }
+    }
+
+    // หากเวลาหมดและยังไม่ตอบถูก
+    if (time <= 0 && !greenOverlayPanel.activeSelf)
+    {
+        redOverlayPanel.SetActive(true);
+        HandleGameOver();
+    }
+}
+
+    void HandleGameOver()
+    {
+        redOverlayPanel.SetActive(true);
+        StopAllCoroutines();
+    }
+
+    IEnumerator ShowGreenOverlayAndProceed()
+    {
+        greenOverlayPanel.SetActive(true);
+        yield return new WaitForSeconds(greenOverlayDisplayTime);
+        greenOverlayPanel.SetActive(false);
+        selectionPanel.SetActive(false);
+
+        StartCoroutine(StartRound());
+    }
+
+    void ShowMissionCompleted()
+    {
+        finishedPanel.SetActive(true);
+        StopAllCoroutines();
+    }
+
+    void OnConfirmSelection()
+    {
+        if (selectedSymbols.Count == symbolsToRememberSprites.Count)
+        {
+            CheckSelection(); // ตรวจสอบคำตอบ
+
+            if (greenOverlayPanel.activeSelf) // หากคำตอบถูกต้อง
+            {
+                redOverlayPanel.SetActive(false); // ปิด redOverlayPanel เพื่อป้องกันซ้อน
+            }
+        }
+        else
+        {
+            selectionQText.text = "เลือกให้ครบก่อนกดยืนยัน!!";
+        }
+    }
+
+    void CheckSelection()
+    {
+        var selectedSprites = selectedSymbols.Select(x => x.GetComponent<Image>().sprite).ToList();
+
+        if (selectedSprites.All(sprite => symbolsToRememberSprites.Contains(sprite)))
+        {
+            round++;
+
+            // หยุดตัวจับเวลา
+            StopCoroutine(nameof(SelectionCountdown));
+            selectionTimerText.text = "";
+
+            // แสดง GreenOverlayPanel และไปต่อรอบถัดไป
+            greenOverlayPanel.SetActive(true);
+            redOverlayPanel.SetActive(false);
+
+            selectionQText.text = "เลือกสัญลักษณ์ที่ถูกต้อง";
+
+            if (round > maxRounds)
+            {
+                ShowMissionCompleted();
+            }
+            else
+            {
+                StartCoroutine(ShowGreenOverlayAndProceed());
+            }
+        }
+        else
+        {
+            selectionQText.text = "เลือกผิด!! ลองอีกครั้ง";
+            ShuffleAllSymbolsWithoutRevealingAnswers();
+        }
+    }
+
+    void ShuffleAllSymbolsWithoutRevealingAnswers()
+    {
+        foreach (Transform child in selectionGrid)
+        {
+            Destroy(child.gameObject);
+        }
+
+        List<Sprite> newSelectionSprites = new List<Sprite>();
+        List<Sprite> nonFramedMemorySymbols = symbolsToRememberSprites
+            .Select(x => allSymbols[System.Array.IndexOf(framedSymbols, x)])
+            .ToList();
+
+        newSelectionSprites.AddRange(nonFramedMemorySymbols);
+        List<Sprite> remainingNonFramedSymbols = allSymbols.Except(newSelectionSprites).ToList();
+        newSelectionSprites.AddRange(remainingNonFramedSymbols.OrderBy(x => Random.value).Take(9 - newSelectionSprites.Count));
+        newSelectionSprites = newSelectionSprites.OrderBy(x => Random.value).ToList();
+
+        foreach (Sprite sprite in newSelectionSprites)
+        {
+            GameObject newSymbol = Instantiate(symbolPrefab, selectionGrid);
+            newSymbol.GetComponent<Image>().sprite = sprite;
+
+            Button button = newSymbol.GetComponent<Button>();
+            button.onClick.AddListener(() => OnSymbolSelected(newSymbol, sprite));
+        }
+
+        selectedSymbols.Clear();
+    }
+
+    void OnSymbolSelected(GameObject symbol, Sprite sprite)
+    {
+        Image img = symbol.GetComponent<Image>();
+
+        if (selectedSymbols.Contains(symbol))
+        {
+            selectedSymbols.Remove(symbol);
+            int index = System.Array.IndexOf(framedSymbols, img.sprite);
+            img.sprite = allSymbols[index];
+        }
+        else if (selectedSymbols.Count < symbolsToRememberSprites.Count)
+        {
+            selectedSymbols.Add(symbol);
+            int index = System.Array.IndexOf(allSymbols, sprite);
+            if (index != -1)
+            {
+                img.sprite = framedSymbols[index];
+            }
+        }
+    }
+}

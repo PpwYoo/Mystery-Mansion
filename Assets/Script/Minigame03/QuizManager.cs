@@ -30,11 +30,13 @@ public class QuizManager : MonoBehaviour
     public List<QuestionData> countryQuestionsOriginal;
     public List<QuestionData> countingQuestionsOriginal;
     public List<QuestionData> importantPersonQuestionsOriginal;
-    public List<QuestionData> analyticalThinkingQuestionsOriginal; // หมวดที่ 5 คิดวิเคราะห์
+    public List<QuestionData> analyticalThinkingQuestionsOriginal;
 
     private List<QuestionData> currentQuestionList;
     private QuestionData currentQuestion;
     private string currentCategoryName;
+
+    private int lastLoggedRound = -1; // ใช้เพื่อตรวจสอบว่ารอบเปลี่ยนหรือไม่
 
     void Start()
     {
@@ -45,7 +47,12 @@ public class QuizManager : MonoBehaviour
 
     void Update()
     {
-        Debug.Log("Current Round: " + gameController.currentRound);
+        // Debug เฉพาะเมื่อ currentRound เปลี่ยนไป
+        if (gameController.currentRound != lastLoggedRound)
+        {
+            Debug.Log("Current Round: " + gameController.currentRound);
+            lastLoggedRound = gameController.currentRound;
+        }
     }
 
     void StartRound()
@@ -148,5 +155,6 @@ public class QuizManager : MonoBehaviour
 
     void ResetQuestions()
     {
+        // คุณสามารถเพิ่มการรีเซตคำถามในหมวดต่างๆ ได้ที่นี่
     }
 }
