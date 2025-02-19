@@ -16,29 +16,24 @@ public class PlayerDisplay : MonoBehaviour
     public string playerName;
     public string playerRole;
 
-    private GameStart voteManager;
-    private GameStart employerManager;
-    private GameStart villainManager;
+    private GameStart gameStartManager;
+    private GameStartII gameStartIIManager;
 
     void Start()
     {
-        
         if (leaderIcon != null)
         {
             leaderIcon.gameObject.SetActive(false);
         }
 
-        voteManager = FindObjectOfType<GameStart>();
+        gameStartManager = FindObjectOfType<GameStart>();
+        gameStartIIManager = FindObjectOfType<GameStartII>();
 
         if (playerButton != null)
         {
             playerButton.onClick.AddListener(OnPlayerSelected);
         }
-
-        employerManager = FindObjectOfType<GameStart>();
-        villainManager = FindObjectOfType<GameStart>();
     }
-
 
     public void SetPlayerInfo(string playerName)
     {
@@ -70,27 +65,33 @@ public class PlayerDisplay : MonoBehaviour
 
     private void OnPlayerSelected()
     {
-        if (voteManager != null && !string.IsNullOrEmpty(playerName))
+        if (!string.IsNullOrEmpty(playerName))
         {
-            if (!voteManager.isEmployerSelectionActive && !voteManager.isVillainSelectionActive)
+            if (gameStartManager != null)
             {
-                voteManager.OnCaptainSelected(playerName);
+                if (!gameStartManager.isEmployerSelectionActive && !gameStartManager.isVillainSelectionActive)
+                {
+                    gameStartManager.OnCaptainSelected(playerName);
+                }
+                if (gameStartManager.isEmployerSelectionActive)
+                {
+                    gameStartManager.PerformActionForEmployer(playerName);
+                }
+                if (gameStartManager.isVillainSelectionActive)
+                {
+                    gameStartManager.PerformActionForVillain(playerName);
+                }
             }
-        }
-
-        if (employerManager != null && !string.IsNullOrEmpty(playerName))
-        {
-            if (voteManager.isEmployerSelectionActive)
+            else if (gameStartIIManager != null)
             {
-                employerManager.PerformActionForEmployer(playerName);
-            }
-        }
-
-        if (villainManager != null && !string.IsNullOrEmpty(playerName))
-        {
-            if (voteManager.isVillainSelectionActive)
-            {
-                villainManager.PerformActionForVillain(playerName);
+                if (gameStartIIManager.isEmployerSelectionActive)
+                {
+                    gameStartIIManager.PerformActionForEmployer(playerName);
+                }
+                if (gameStartIIManager.isVillainSelectionActive)
+                {
+                    gameStartIIManager.PerformActionForVillain(playerName);
+                }
             }
         }
     }

@@ -1335,8 +1335,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameStart, Assembly-CSharp
+      - m_Target: {fileID: 1295308429}
+        m_TargetAssemblyTypeName: GameStartII, Assembly-CSharp
         m_MethodName: ConfirmEmployerSelection
         m_Mode: 1
         m_Arguments:
@@ -3976,8 +3976,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameStart, Assembly-CSharp
+      - m_Target: {fileID: 1295308429}
+        m_TargetAssemblyTypeName: GameStartII, Assembly-CSharp
         m_MethodName: CancelEmployerSelection
         m_Mode: 1
         m_Arguments:
@@ -5187,6 +5187,15 @@ MonoBehaviour:
   - {fileID: 1035074001}
   successSprite: {fileID: 21300000, guid: 1ee1b19b1db4d40ed816aea539977e96, type: 3}
   failSprite: {fileID: 21300000, guid: 6fe80d9b617104055b02ddf1ac274651, type: 3}
+  timerText: {fileID: 986760699}
+  discussTimeLimit: 5
+  employerConfirmationPanel: {fileID: 1223341887}
+  employerConfirmationText: {fileID: 637072967}
+  goodBadResult: {fileID: 525827433}
+  isEmployerSelectionActive: 0
+  villainConfirmationPanel: {fileID: 1173508894}
+  villainConfirmationText: {fileID: 1663644918}
+  isVillainSelectionActive: 0
 --- !u!1 &1457680634
 GameObject:
   m_ObjectHideFlags: 0
@@ -5735,8 +5744,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameStart, Assembly-CSharp
+      - m_Target: {fileID: 1295308429}
+        m_TargetAssemblyTypeName: GameStartII, Assembly-CSharp
         m_MethodName: ConfirmVillainSelection
         m_Mode: 1
         m_Arguments:
@@ -6591,8 +6600,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameStart, Assembly-CSharp
+      - m_Target: {fileID: 1295308429}
+        m_TargetAssemblyTypeName: GameStartII, Assembly-CSharp
         m_MethodName: CancelVillainSelection
         m_Mode: 1
         m_Arguments:
