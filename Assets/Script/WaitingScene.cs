@@ -26,7 +26,7 @@ public class WaitingScene : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
 
             int waitingPlayers = 0;
             foreach (Player player in PhotonNetwork.PlayerList)
@@ -63,6 +63,10 @@ public class WaitingScene : MonoBehaviour
 
     void ChangeToNextScene()
     {
+        ExitGames.Client.Photon.Hashtable resetProps = new ExitGames.Client.Photon.Hashtable();
+        resetProps["CurrentScene"] = "";
+        PhotonNetwork.LocalPlayer.SetCustomProperties(resetProps);
+
         PhotonNetwork.LoadLevel("GameStartII");
     }
 }

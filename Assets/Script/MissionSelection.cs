@@ -18,12 +18,21 @@ public class MissionSelection : MonoBehaviourPunCallbacks
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Leader"))
         {
             string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
-            Debug.Log($"หัวหน้าภารกิจคือ: {leader}");
 
             // ทุกคนสามารถเลือกภารกิจเพื่อดูรายละเอียดได้
             foreach (Button button in missionButtons)
             {
                 button.interactable = true; 
+            }
+
+            // ปิดปุ่มภารกิจที่เคยเล่นไปแล้ว
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("PlayedMissions"))
+            {
+                int[] playedMissions = (int[])PhotonNetwork.CurrentRoom.CustomProperties["PlayedMissions"];
+                foreach (int index in playedMissions)
+                {
+                    missionButtons[index].interactable = false;
+                }
             }
 
             // เฉพาะหัวหน้าภารกิจที่สามารถเลือกภารกิจได้
@@ -70,9 +79,24 @@ public class MissionSelection : MonoBehaviourPunCallbacks
         {
             this.sceneIndex = sceneIndex;
 
+            // ดึงภารกิจที่เล่นไปแล้ว (ถ้ามี)
+            int[] playedMissions = new int[0];
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("PlayedMissions"))
+            {
+                playedMissions = (int[])PhotonNetwork.CurrentRoom.CustomProperties["PlayedMissions"];
+            }
+
+            List<int> playedMissionsList = new List<int>(playedMissions);
+
+            // เพิ่มภารกิจใหม่เข้าไปในลิสต์
+            if (!playedMissionsList.Contains(sceneIndex))
+            {
+                playedMissionsList.Add(sceneIndex);
+            }  
+
             ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
             {
-                { "SelectedMission", sceneIndex }
+                { "SelectedMission", sceneIndex },{ "PlayedMissions", playedMissionsList.ToArray() }
             };
             PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
         }

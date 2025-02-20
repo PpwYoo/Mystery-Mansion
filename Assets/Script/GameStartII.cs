@@ -18,7 +18,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public Image[] missionResultImages;
     public Sprite successSprite;
     public Sprite failSprite;
-    private int missionIndex = 0;
+    Dictionary<string, int> missionPositions = new Dictionary<string, int>()
+    { { "Fingerprint", 0 },{ "Mission_SpotDifference", 1 },{ "RandomQuiz", 2 },{ "RightSigns", 3 },{ "Mission_FindTheWay", 4 }};
 
     [Header("Discuss Time")]
     public TMP_Text timerText;
@@ -43,6 +44,17 @@ public class GameStartII : MonoBehaviourPunCallbacks
     IEnumerator Start()
     {
         SetupPlayers();
+
+        // แสดงผลภารกิจ
+        foreach (string missionKey in missionPositions.Keys)
+        {
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey($"Result_{missionKey}"))
+            {
+                bool isMissionSuccess = (bool)PhotonNetwork.CurrentRoom.CustomProperties[$"Result_{missionKey}"];
+                missionResultImages[missionPositions[missionKey]].sprite = isMissionSuccess ? successSprite : failSprite;
+            }
+        }
+
         yield return new WaitUntil(() => PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.PlayerList.Length);
 
         PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable()
@@ -156,16 +168,23 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     void ShowMissionResult(string missionKey)
     {
+        if (missionResultImages == null || missionResultImages.Length == 0) { return; }
+
         if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue($"Result_{missionKey}", out object result))
         {
             bool isMissionSuccess = (bool)result;
             messageText.text = isMissionSuccess ? "ภารกิจสำเร็จ" : "ภารกิจล้มเหลว";
-            Debug.Log($"{missionKey} result: {(isMissionSuccess ? "Success" : "Fail")}");
 
-            if (missionIndex < missionResultImages.Length)
+            if (missionPositions.TryGetValue(missionKey, out int missionPosition))
             {
-                missionResultImages[missionIndex].sprite = isMissionSuccess ? successSprite : failSprite;
-                missionIndex++;
+                if (missionPosition >= 0 && missionPosition < missionResultImages.Length)
+                {
+                    missionResultImages[missionPosition].sprite = isMissionSuccess ? successSprite : failSprite;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[GameStartII] Mission key '{missionKey}' not found in missionPositions dictionary");
             }
         }
         else
@@ -235,21 +254,16 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
     {
-        if (propertiesThatChanged.ContainsKey("Result_Mission_SpotDifference"))
+        foreach (string missionKey in missionPositions.Keys)
         {
-            ShowMissionResult("Mission_SpotDifference");
+            if (propertiesThatChanged.ContainsKey($"Result_{missionKey}"))
+            {
+                ShowMissionResult(missionKey);
+            }
         }
-
-        if (propertiesThatChanged.ContainsKey("Result_Mission_FindTheWay"))
-        {
-            ShowMissionResult("Mission_FindTheWay");
-        }
-
-        // ---------------------------------------------------------------------------------
 
         if (propertiesThatChanged.ContainsKey("EmployerActionDone") || propertiesThatChanged.ContainsKey("VillainActionDone"))
         {
-            Debug.Log($"[DEBUG] อัปเดตจากห้อง: Employer Done: {PhotonNetwork.CurrentRoom.CustomProperties["EmployerActionDone"]}, Villain Done: {PhotonNetwork.CurrentRoom.CustomProperties["VillainActionDone"]}");
             CheckIfBothActionsCompletedAndLoadScene();
         }
     }

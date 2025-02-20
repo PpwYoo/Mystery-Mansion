@@ -52,9 +52,6 @@ public class GameStart : MonoBehaviourPunCallbacks
     public bool isEmployerSelectionActive = false;
 
     [Header("Villain Action")]
-    public GameObject helpButton;
-    public GameObject teaseButton;
-
     public GameObject villainConfirmationPanel;
     public TMP_Text villainConfirmationText;
 
@@ -76,12 +73,6 @@ public class GameStart : MonoBehaviourPunCallbacks
         voteResultsPanel.SetActive(false);
 
         employerConfirmationPanel.SetActive(false);
-
-        helpButton.SetActive(false);
-        teaseButton.SetActive(false);
-
-        helpButton.GetComponent<Button>().onClick.AddListener(() => PerformVillainAction("ช่วยเหลือ"));
-        teaseButton.GetComponent<Button>().onClick.AddListener(() => PerformVillainAction("กลั่นแกล้ง"));
     }
 
     void SetupPlayers()
@@ -231,9 +222,9 @@ public class GameStart : MonoBehaviourPunCallbacks
         }
 
         // การกระทำของคนร้าย
-        if (targetPlayer == PhotonNetwork.LocalPlayer && changedProps.ContainsKey("VillainTarget") && changedProps.ContainsKey("VillainAction"))
+        if (targetPlayer == PhotonNetwork.LocalPlayer && changedProps.ContainsKey("VillainTarget"))
         {
-            Debug.Log($"เป้าหมาย: {changedProps["VillainTarget"]}, การกระทำ: {changedProps["VillainAction"]}");
+            Debug.Log($"เป้าหมาย: {changedProps["VillainTarget"]}");
         }
 
         base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
@@ -251,7 +242,6 @@ public class GameStart : MonoBehaviourPunCallbacks
 
         if (propertiesThatChanged.ContainsKey("EmployerActionDone") || propertiesThatChanged.ContainsKey("VillainActionDone"))
         {
-            Debug.Log($"[DEBUG] อัปเดตจากห้อง: Employer Done: {PhotonNetwork.CurrentRoom.CustomProperties["EmployerActionDone"]}, Villain Done: {PhotonNetwork.CurrentRoom.CustomProperties["VillainActionDone"]}");
             CheckIfBothActionsCompletedAndLoadScene();
         }
     }
@@ -387,11 +377,12 @@ public class GameStart : MonoBehaviourPunCallbacks
         string localPlayerRole = (string)PhotonNetwork.LocalPlayer.CustomProperties["Role"];
         if (localPlayerRole == "ผู้ว่าจ้าง")
         {
+            messageText.text = "เลือกตรวจสอบผู้เล่น 1 คน";
             PerformActionForEmployer(employerselectedPlayer);
         }
         else if (localPlayerRole == "คนร้าย")
         {
-            Debug.Log("คุณคือ คนร้าย");
+            messageText.text = "เลือกกลั่นแกล้งผู้เล่น 1 คน";
             PerformActionForVillain(villainselectedPlayer);
         }
         else
@@ -421,14 +412,12 @@ public class GameStart : MonoBehaviourPunCallbacks
     // เลือกหัวหน้าภารกิจ
     public void OnCaptainSelected(string playerName)
     {
-        // if (!isVotingEnabled && !isEmployerSelectionActive)
         if (!isVotingEnabled || isEmployerSelectionActive || isVillainSelectionActive)
         {
             Debug.Log("ยังไม่สามารถเลือกหัวหน้าได้");
             return;
         }
-
-        // if (isVotingTimeOver && !isEmployerSelectionActive)
+        
         if (isVotingTimeOver)
         {
             Debug.Log("ไม่สามารถโหวตได้ เพราะหมดเวลาแล้ว");
@@ -614,8 +603,12 @@ public class GameStart : MonoBehaviourPunCallbacks
 
     public void ConfirmVillainSelection()
     {
+        if (!string.IsNullOrEmpty(villainselectedPlayer))
+        {
+            SetVillainTarget(villainselectedPlayer);
+        }
+
         villainConfirmationPanel.SetActive(false);
-        ShowVillainActionButtons();
     }
 
     public void CancelVillainSelection()
@@ -631,31 +624,16 @@ public class GameStart : MonoBehaviourPunCallbacks
         villainselectedPlayer = null;   
     }
 
-    void ShowVillainActionButtons()
+    void SetVillainTarget(string playerName)
     {
-        helpButton.SetActive(true);
-        teaseButton.SetActive(true);
-    }
-
-    // ช่วยเหลือ or กลั่นแกล้ง
-    void PerformVillainAction(string action)
-    {
-        SetVillainAction(villainselectedPlayer, action);
-        FinishVillainSelection();
-    }
-
-    // เก็บข้อมูลการกระทำของคนร้าย
-    void SetVillainAction(string playerName, string action)
-    {
+        // บันทึกข้อมูลเป้าหมายของคนร้าย
         ExitGames.Client.Photon.Hashtable villainAction = new ExitGames.Client.Photon.Hashtable
         {
-            { "VillainTarget", playerName },
-            { "VillainAction", action }
+            { "VillainTarget", playerName }
         };
         PhotonNetwork.LocalPlayer.SetCustomProperties(villainAction);
 
-        helpButton.SetActive(false);
-        teaseButton.SetActive(false);
+        FinishVillainSelection();
     }
 
     void FinishVillainSelection()
