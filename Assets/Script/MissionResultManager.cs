@@ -23,7 +23,7 @@ public class MissionResultManager : MonoBehaviourPunCallbacks
     public void CalculateMissionResult(string missionKey)
     {
         if (!PhotonNetwork.IsMasterClient) return;
-        if (missionKey != "Mission_SpotDifference" && missionKey != "Mission_FindTheWay") { return; }
+        if (missionKey != "Mission_Fingerprint" && missionKey != "Mission_SpotDifference" && missionKey != "Mission_RandomQuiz" && missionKey != "Mission_RightSigns" && missionKey != "Mission_FindTheWay") { return; }
 
         int totalPlayers = PhotonNetwork.PlayerList.Length;
         int successThreshold = Mathf.CeilToInt(totalPlayers / 2f);

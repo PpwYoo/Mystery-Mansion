@@ -19,7 +19,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public Sprite successSprite;
     public Sprite failSprite;
     Dictionary<string, int> missionPositions = new Dictionary<string, int>()
-    { { "Fingerprint", 0 },{ "Mission_SpotDifference", 1 },{ "RandomQuiz", 2 },{ "RightSigns", 3 },{ "Mission_FindTheWay", 4 }};
+    { { "Mission_Fingerprint", 0 },{ "Mission_SpotDifference", 1 },{ "Mission_RandomQuiz", 2 },{ "Mission_RightSigns", 3 },{ "Mission_FindTheWay", 4 }};
 
     [Header("Discuss Time")]
     public TMP_Text timerText;

@@ -39,6 +39,14 @@ public class SpotDifference : MonoBehaviour
 
     private bool isRoundActive => isTimerRunning && isGameActive;
 
+    [Header("Countdown to Start")]
+    public GameObject countdownCanvas;
+    public TMP_Text countdownText;
+
+    [Header("Mission Result")]
+    public GameObject resultCanvas;
+    public TMP_Text resultText;
+
     void Start()
     {
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
@@ -63,6 +71,8 @@ public class SpotDifference : MonoBehaviour
             }
         }
 
+        resultCanvas.SetActive(false);
+        countdownCanvas.SetActive(true);
         StartCoroutine(ShowCountdownAndStart());
     }
 
@@ -83,19 +93,16 @@ public class SpotDifference : MonoBehaviour
 
     IEnumerator ShowCountdownAndStart()
     {
-        isGameActive = false;
-        startText.gameObject.SetActive(true);
+        string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
 
-        for (int i = 3; i > 0; i--)
+        for (int i = 0; i < countdownMessages.Length; i++)
         {
-            startText.text = i.ToString();
+            countdownText.text = countdownMessages[i];
             yield return new WaitForSeconds(1f);
         }
 
-        startText.text = "Start!";
-        yield return new WaitForSeconds(1f);
+        countdownCanvas.SetActive(false);
 
-        startText.gameObject.SetActive(false);
         isGameActive = true;
         isTimerRunning = true;
         StartRound(0);
@@ -151,6 +158,14 @@ public class SpotDifference : MonoBehaviour
         if (differencesFound >= puzzleSets[currentPuzzleSetIndex].rounds[currentRound].differencePoints.Count)
         {
             messageText.text = "Success!";
+
+            var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+            if (currentRound + 1 >= selectedPuzzleSet.rounds.Count)
+            {
+                isTimerRunning = false;
+                isGameActive = false;
+            }
+
             Invoke(nameof(NextRound), 2f);
         }
     }
@@ -170,11 +185,9 @@ public class SpotDifference : MonoBehaviour
     }
 
     void EndGame(bool isSuccess)
-    {
-        isTimerRunning = false;
-        isGameActive = false;
-        
-        messageText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
+    { 
+        resultCanvas.SetActive(true);  
+        resultText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
         
         string playerName = PhotonNetwork.NickName;
         string missionKey = "Mission_SpotDifference";

@@ -4,9 +4,11 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Photon.Pun;
 
 public class SymbolSpawner : MonoBehaviour
 {
+    [Header("Symebol Setting")]
     public GameObject symbolPrefab;
     public Sprite[] allSymbols;
     public Sprite[] framedSymbols;
@@ -14,6 +16,7 @@ public class SymbolSpawner : MonoBehaviour
     public TMP_Text timerText;
     public TMP_Text roundText;
 
+    [Header("General Setting")]
     public GameObject selectionPanel;
     public TMP_Text selectionTimerText;
     public TMP_Text selectionRoundText;
@@ -21,10 +24,15 @@ public class SymbolSpawner : MonoBehaviour
     public Transform selectionGrid;
     public Button confirmButton;
 
+    [Header("Panel Overlay")]
     public GameObject greenOverlayPanel;
     public float greenOverlayDisplayTime = 2f;
     public GameObject redOverlayPanel;
     public GameObject finishedPanel;
+
+    [Header("Countdown to Start")]
+    public GameObject countdownCanvas;
+    public TMP_Text countdownText;
 
     private List<GameObject> spawnedSymbols = new List<GameObject>();
     private List<Sprite> symbolsToRememberSprites = new List<Sprite>();
@@ -38,7 +46,27 @@ public class SymbolSpawner : MonoBehaviour
     // Start & Main Coroutine
     void Start()
     {
+        // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
+        PhotonNetwork.AutomaticallySyncScene = false;
+
         confirmButton.onClick.AddListener(OnConfirmSelection);
+
+        countdownCanvas.SetActive(true);
+        StartCoroutine(StartCountdown());
+    }
+
+    IEnumerator StartCountdown()
+    {
+        countdownCanvas.SetActive(true);
+        string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+
+        for (int i = 0; i < countdownMessages.Length; i++)
+        {
+            countdownText.text = countdownMessages[i];
+            yield return new WaitForSeconds(1f);
+        }
+
+        countdownCanvas.SetActive(false);
         StartCoroutine(StartGame());
     }
 
@@ -209,6 +237,8 @@ public class SymbolSpawner : MonoBehaviour
     {
         redOverlayPanel.SetActive(true);
         StopAllCoroutines();
+
+        SaveMissionResult(false);
     }
 
     IEnumerator ShowGreenOverlayAndProceed()
@@ -264,6 +294,7 @@ public class SymbolSpawner : MonoBehaviour
 
             if (round > maxRounds)
             {
+                SaveMissionResult(true);
                 ShowMissionCompleted();
             }
             else
@@ -326,5 +357,35 @@ public class SymbolSpawner : MonoBehaviour
                 img.sprite = framedSymbols[index];
             }
         }
+    }
+
+    // เก็บผลภารกิจ
+    void SaveMissionResult(bool isSuccess)
+    {
+        string playerName = PhotonNetwork.NickName;
+        string missionKey = "Mission_RightSigns";
+        string missionResult = isSuccess ? "Complete" : "Fail";
+
+        ExitGames.Client.Photon.Hashtable playerResults = new ExitGames.Client.Photon.Hashtable()
+        {
+            { $"{missionKey}_{playerName}", missionResult }
+        };
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
+            {
+                { "CurrentMission", missionKey }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
+        }
+
+        Invoke("ChangeToWaitingScene", 2f);
+    }
+
+    void ChangeToWaitingScene()
+    {
+        PhotonNetwork.LoadLevel("WaitingScene");
     }
 }

@@ -9,9 +9,10 @@ public class FindTheWaySetting : MonoBehaviour
 {
     public TMP_Text timerText, roundText, messageText;
     public Button leftButton, rightButton, upButton, downButton;
+    public GameObject moveArrowCanvas;
 
-    // ตัวเดินผู้เล่น & เส้นชัย
-    public RectTransform playerUI, goalImage, gridPanelRectTransform;
+    [Header("Player & Goal")]
+    public RectTransform playerUI; public RectTransform goalImage; public RectTransform gridPanelRectTransform;
 
     private float totalGameTime = 180f;
     private int currentRound = 0;
@@ -23,6 +24,14 @@ public class FindTheWaySetting : MonoBehaviour
 
     private int gridSize = 5;
 
+    [Header("Countdown to Start")]
+    public GameObject countdownCanvas;
+    public TMP_Text countdownText;
+
+    [Header("Mission Result")]
+    public GameObject resultCanvas;
+    public TMP_Text resultText;
+
     void Start()
     {
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
@@ -30,7 +39,11 @@ public class FindTheWaySetting : MonoBehaviour
         
         currentGridPosition = new Vector2(0,0);
         SetupButtons();
-        StartGame();
+
+        moveArrowCanvas.SetActive(false);
+        resultCanvas.SetActive(false);
+        countdownCanvas.SetActive(true);
+        StartCoroutine(CountdownToStart());
 
         UpdatePlayerUIPosition();
 
@@ -92,43 +105,35 @@ public class FindTheWaySetting : MonoBehaviour
         playerUI.anchoredPosition = newAnchoredPosition;
     }
 
-    public void StartGame()
-    {
-        currentRound = 0;
-        totalGameTime = 180f;
-        messageText.text = "Starting in...";
-        StartCoroutine(CountdownToStart());
-    }
-
     IEnumerator CountdownToStart()
     {
-        int countdown = 3;
-        while (countdown > 0)
+        string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+
+        for (int i = 0; i < countdownMessages.Length; i++)
         {
-            messageText.text = countdown.ToString();
+            countdownText.text = countdownMessages[i];
             yield return new WaitForSeconds(1f);
-            countdown--;
         }
 
-        messageText.text = "Start!";
-        yield return new WaitForSeconds(1f);
-        messageText.text = "";
+        countdownCanvas.SetActive(false);
+        moveArrowCanvas.SetActive(true);
+
         StartRound();
     }
 
     void StartRound()
     {
         playerUI.gameObject.SetActive(true);
-        if (currentRound >= 3)
+        if (currentRound >= 5)
         {
             EndGame(true);
             return;
         }
 
         currentRound++;
-        roundText.text = $"{currentRound}/3";
+        roundText.text = $"{currentRound}/5";
 
-        int numberOfTraps = 3 + (currentRound - 1) * 2; // รอบ 1: 3, รอบ 2: 5, รอบ 3: 7
+        int numberOfTraps = 5 + currentRound;
 
         // ตำแหน่งเส้นชัย
         Vector2 goal = new Vector2(gridSize - 1, gridSize - 1);
@@ -279,8 +284,9 @@ public class FindTheWaySetting : MonoBehaviour
 
         playerUI.gameObject.SetActive(false);
         goalImage.gameObject.SetActive(false);
-
-        messageText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
+        
+        resultCanvas.SetActive(true);
+        resultText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
 
         string playerName = PhotonNetwork.NickName;
         string missionKey = "Mission_FindTheWay";
