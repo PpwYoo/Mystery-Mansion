@@ -6,6 +6,7 @@ using TMPro;
 
 public class Fingerprint : MonoBehaviour
 {
+    // --- Data Class สำหรับคำถาม ---
     [System.Serializable]
     public class QuestionData
     {
@@ -15,6 +16,7 @@ public class Fingerprint : MonoBehaviour
         public int correctAnswerIndex;
     }
 
+    // --- Public Variables ---
     public QuestionData[] questions;
     public Button[] choiceButtons;
     public Button submitButton;
@@ -22,11 +24,22 @@ public class Fingerprint : MonoBehaviour
     public GameObject mapCanvas;
     public GameObject answerWrongPanel;
     public GameObject answerCorrectPanel;
+    public GameObject mapGameOverPanel; // GameOverPanel สำหรับ MapCanvas
+    public GameObject questionGameOverPanel; // GameOverPanel สำหรับ QuestionCanvas
+    public GameObject finishedPanel; // Panel แสดง Mission Completed
     public Image questionImage;
     public TMP_Text mapTimerText; // ตัวแสดงเวลาใน MapCanvas
     public TMP_Text questionTimerText; // ตัวแสดงเวลาใน QuestionCanvas
     public Image[] levelIcons; // แว่นขยายที่ใช้แสดงด่าน
 
+    // --- Events ---
+    public delegate void GameOverHandler();
+    public event GameOverHandler OnGameOver;
+
+    public delegate void MissionCompletedHandler();
+    public event MissionCompletedHandler OnMissionCompleted;
+
+    // --- Private Variables ---
     private float timer = 120f;
     private bool isTimerRunning = false;
     private QuestionData currentQuestion;
@@ -34,13 +47,7 @@ public class Fingerprint : MonoBehaviour
     private int currentLevel = 0;
     private int totalLevels;
 
-    // เพิ่ม Event สำหรับ Game Over และ Mission Completed
-    public delegate void GameOverHandler();
-    public event GameOverHandler OnGameOver;
-
-    public delegate void MissionCompletedHandler();
-    public event MissionCompletedHandler OnMissionCompleted;
-
+    // --- Unity Lifecycle Methods ---
     void Start()
     {
         totalLevels = questions.Length;
@@ -49,42 +56,60 @@ public class Fingerprint : MonoBehaviour
 
         submitButton.interactable = false;
         submitButton.onClick.AddListener(SubmitAnswer);
-
-        // เริ่มต้นซ่อนแว่นขยายของด่านที่ยังไม่ผ่าน
-        for (int i = 1; i < levelIcons.Length; i++) 
-        {
-            levelIcons[i].gameObject.SetActive(false); // ซ่อนด่านถัดไป
-        }
     }
 
     void Update()
     {
-        if (isTimerRunning)
-        {
-            timer -= Time.deltaTime;
-            if (timer <= 0)
-            {
-                timer = 0;
-                isTimerRunning = false;
-                Debug.Log("Time's up!");
-
-                ShowGameOverPanel();  // แสดง Game Over Panel หากหมดเวลา
-            }
-
-            mapTimerText.text = $"TIME: {Mathf.CeilToInt(timer)}";
-            questionTimerText.text = $"TIME: {Mathf.CeilToInt(timer)}";
-        }
+        UpdateTimer();
     }
 
+    // --- Timer Methods ---
     public void StartTimer()
     {
         if (!isTimerRunning)
         {
             isTimerRunning = true;
-            timer = 120f;  // ตั้งเวลาเริ่มต้นที่ 180 วินาที
+            timer = 120f; // ตั้งเวลาเริ่มต้นที่ 120 วินาที
         }
     }
 
+    private bool isGameOver = false; // Flag สำหรับตรวจสอบว่า GameOverPanel ถูกแสดงแล้วหรือไม่
+
+private void UpdateTimer()
+{
+    if (isTimerRunning && !isGameOver)
+    {
+        timer -= Time.deltaTime;
+
+        if (timer <= 0)
+        {
+            timer = 0;
+            isTimerRunning = false;
+
+            // เรียก Game Over Panel ทันทีเมื่อหมดเวลา
+            isGameOver = true; // ป้องกันการเรียกซ้ำ
+            if (mapCanvas.activeSelf)
+            {
+                ShowGameOverPanel(false); // แสดง GameOverPanel สำหรับ MapCanvas
+            }
+            else if (questionCanvas.activeSelf)
+            {
+                ShowGameOverPanel(true); // แสดง GameOverPanel สำหรับ QuestionCanvas
+            }
+        }
+
+        // แปลงเวลาเป็นนาทีและวินาที
+        int minutes = Mathf.FloorToInt(timer / 60);
+        int seconds = Mathf.FloorToInt(timer % 60);
+
+        // อัปเดตข้อความเวลาในรูปแบบ 00:00
+        string timeFormatted = $"{minutes:D2}:{seconds:D2}";
+        mapTimerText.text = $"{timeFormatted}";
+        questionTimerText.text = $"{timeFormatted}";
+    }
+}
+
+    // --- UI Navigation Methods ---
     public void ShowMap()
     {
         mapCanvas.SetActive(true);
@@ -92,29 +117,42 @@ public class Fingerprint : MonoBehaviour
         answerWrongPanel.SetActive(false);
         answerCorrectPanel.SetActive(false);
 
-        // ซ่อนแว่นขยายของด่านที่ผ่านไปแล้ว และแสดงแว่นขยายของด่านถัดไป
-        for (int i = 0; i < levelIcons.Length; i++) 
+        for (int i = 0; i < levelIcons.Length; i++)
         {
-            if (i < currentLevel) 
+            Image levelIconImage = levelIcons[i];
+            Button levelButton = levelIcons[i].GetComponent<Button>();
+
+            if (i < currentLevel)
             {
-                levelIcons[i].gameObject.SetActive(false);  // ซ่อนด่านที่ผ่านไปแล้ว
+                if (levelButton != null) levelButton.interactable = false;
             }
             else if (i == currentLevel)
             {
-                levelIcons[i].gameObject.SetActive(true);  // แสดงด่านปัจจุบัน
+                levelIconImage.color = Color.white; // สีปกติ
+                if (levelButton != null)
+                {
+                    levelButton.interactable = true;
+                    levelButton.onClick.RemoveAllListeners();
+                    int levelIndex = i;
+                    levelButton.onClick.AddListener(() => ShowQuestion(levelIndex));
+                }
+            }
+            else
+            {
+                levelIconImage.color = Color.gray; // สีจางสำหรับด่านที่ยังไม่ปลดล็อก
+                if (levelButton != null) levelButton.interactable = false;
             }
         }
     }
 
     public void ShowQuestion(int questionIndex)
     {
-        if (questionIndex >= totalLevels) 
+        if (questionIndex >= totalLevels)
         {
-            MissionCompleted();  // เมื่อผ่านด่านทั้งหมด ให้เรียก MissionCompleted
+            MissionCompleted();
             return;
         }
 
-        // ซ่อนทุก Canvas ก่อนที่จะเปิดคำถามใหม่
         mapCanvas.SetActive(false);
         questionCanvas.SetActive(true);
 
@@ -142,6 +180,7 @@ public class Fingerprint : MonoBehaviour
         submitButton.interactable = false;
     }
 
+    // --- Answer Selection Methods ---
     public void OnChoiceSelected(int index)
     {
         selectedAnswerIndex = index;
@@ -149,69 +188,96 @@ public class Fingerprint : MonoBehaviour
 
         for (int i = 0; i < choiceButtons.Length; i++)
         {
-            if (i == index)
-            {
-                choiceButtons[i].image.sprite = currentQuestion.selectedFrameSprites[i];
-            }
-            else
-            {
-                choiceButtons[i].image.sprite = currentQuestion.choices[i];
-            }
+            choiceButtons[i].image.sprite = i == index 
+                ? currentQuestion.selectedFrameSprites[i] 
+                : currentQuestion.choices[i];
         }
 
         submitButton.interactable = true;
     }
 
     public void SubmitAnswer()
-    {
-        if (selectedAnswerIndex == -1) return;
+{
+    if (selectedAnswerIndex == -1) return;
 
-        if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
+    if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
+    {
+        Debug.Log("Correct Answer!");
+        
+        // ถ้าเป็นด่านสุดท้าย แสดง MissionCompleted
+        if (currentLevel == totalLevels - 1)
         {
-            Debug.Log("Correct Answer!");
-            StartCoroutine(ShowCorrectAnswerPanel());
+            MissionCompleted();
         }
         else
         {
-            Debug.Log("Wrong Answer! Try again.");
-            StartCoroutine(ShowWrongAnswerPanel());
+            StartCoroutine(ShowCorrectAnswerPanel());
         }
     }
+    else
+    {
+        Debug.Log("Wrong Answer! Try again.");
+        StartCoroutine(ShowWrongAnswerPanel());
+    }
+}
 
+    // --- Panel Display Methods ---
     IEnumerator ShowWrongAnswerPanel()
     {
         answerWrongPanel.SetActive(true);
         yield return new WaitForSeconds(2f);
         answerWrongPanel.SetActive(false);
-        ShowQuestion(currentLevel);  // กลับไปถามใหม่
+        ShowQuestion(currentLevel); // กลับไปถามใหม่
     }
 
     IEnumerator ShowCorrectAnswerPanel()
+{
+    answerCorrectPanel.SetActive(true);
+    yield return new WaitForSeconds(2f);
+    answerCorrectPanel.SetActive(false);
+
+    currentLevel++; // เพิ่มเลเวลหลังจากผ่านด่าน
+
+    if (currentLevel < totalLevels)
     {
-        answerCorrectPanel.SetActive(true);
-        yield return new WaitForSeconds(2f);
-        answerCorrectPanel.SetActive(false);
-
-        currentLevel++;
-
-        // เมื่อผ่านด่านแล้ว แสดงด่านถัดไปและซ่อนด่านที่ผ่านไปแล้ว
-        if (currentLevel < totalLevels)
-        {
-            ShowMap();  // กลับไปที่ MapCanvas เพื่อเล่นด่านถัดไป
-        }
-        else
-        {
-            MissionCompleted(); // เรียกใช้ event เมื่อเล่นครบทุกด่าน
-        }
+        ShowMap();
     }
-
-    public void ShowGameOverPanel()
+    else
     {
-        OnGameOver?.Invoke(); // เรียกใช้ event เมื่อเกมจบ
+        MissionCompleted(); // แสดง Finished Panel หากผ่านด่านสุดท้าย
     }
+}
+
+    public void ShowGameOverPanel(bool isInQuestionCanvas)
+{
+    OnGameOver?.Invoke(); // เรียก Event เมื่อเกมจบ
+
+    // ปิด Panel ที่ไม่เกี่ยวข้อง
+    answerWrongPanel.SetActive(false);
+    answerCorrectPanel.SetActive(false);
+
+    if (isInQuestionCanvas)
+    {
+        // เวลาหมดใน QuestionCanvas
+        mapCanvas.SetActive(false);
+        questionCanvas.SetActive(true); // ยังคงแสดง QuestionCanvas
+        questionGameOverPanel.SetActive(true); // แสดง Panel เฉพาะของ QuestionCanvas
+        Debug.Log("Game Over: Time ran out in QuestionCanvas");
+    }
+    else
+    {
+        // เวลาหมดใน MapCanvas
+        questionCanvas.SetActive(false);
+        mapCanvas.SetActive(true); // ยังคงแสดง MapCanvas
+        mapGameOverPanel.SetActive(true); // แสดง Panel เฉพาะของ MapCanvas
+        Debug.Log("Game Over: Time ran out in MapCanvas");
+    }
+}
 
     public void MissionCompleted()
     {
-        OnMissionCompleted?.Invoke(); // เรียกใช้ event เมื่อสำเร็จ
+        OnMissionCompleted?.Invoke();
+        finishedPanel.SetActive(true);
+        mapCanvas.SetActive(false);
     }
 }
