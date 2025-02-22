@@ -199,6 +199,30 @@ public class GameStartII : MonoBehaviourPunCallbacks
         yield return new WaitForSeconds(3f);
     }
 
+    // เช็คว่าตอนนี้มีภารกิจที่สำเร็จเท่าไหร่ ล้มเหลวเท่าไหร่
+    void CheckMissionResult()
+    {
+        int successCount = 0;
+        int failCount = 0;
+
+        foreach (string missionKey in missionPositions.Keys)
+        {
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey($"Result_{missionKey}"))
+            {
+                bool isMissionSuccess = (bool)PhotonNetwork.CurrentRoom.CustomProperties[$"Result_{missionKey}"];
+                if (isMissionSuccess)
+                {
+                    successCount++;
+                }
+                else
+                {
+                    failCount++;
+                }
+            }
+        }
+        Debug.Log($"Mission Successes: {successCount}, Mission Fails: {failCount}");
+    }
+
     void StartDiscuss()
     {
         timeRemaining = discussTimeLimit;
@@ -261,6 +285,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
                 ShowMissionResult(missionKey);
             }
         }
+
+        CheckMissionResult();
 
         if (propertiesThatChanged.ContainsKey("EmployerActionDone") || propertiesThatChanged.ContainsKey("VillainActionDone"))
         {
@@ -463,11 +489,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
         bool allEmployerDone = employerCount > 0 && PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("EmployerActionDone", out object employerDoneObj) && employerDoneObj is bool employerDone && employerDone;
         bool allVillainDone = villainCount > 0 && PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("VillainActionDone", out object villainDoneObj) && villainDoneObj is bool villainDone && villainDone;
 
-        Debug.Log($"[DEBUG] Employer Done: {allEmployerDone}, Villain Done: {allVillainDone}");
-
         if ((villainCount == 0 || allVillainDone) && (employerCount == 0 || allEmployerDone))
         {
-            Debug.Log("[DEBUG] ทุกคนทำการกระทำเสร็จแล้ว กำลังเปลี่ยนฉาก...");
             StartCoroutine(ShowMissionMessageAndLoadScene());
         }
     }

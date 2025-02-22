@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using Photon.Pun;
 
 public class GameController : MonoBehaviour
 {
@@ -17,8 +18,15 @@ public class GameController : MonoBehaviour
     private bool isGameActive = true; // Flag to check if the game is active
     private int lastUpdatedRound = 0; // To prevent unnecessary round UI updates
 
+    [Header("Countdown to Start")]
+    public GameObject countdownCanvas;
+    public TMP_Text countdownText;
+
     void Start()
     {
+        // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
+        PhotonNetwork.AutomaticallySyncScene = false;
+
         if (timerText == null || roundText == null || successOverlay == null || gameOverOverlay == null)
         {
             Debug.LogError("UI elements or overlays are not assigned in the inspector!");
@@ -27,10 +35,11 @@ public class GameController : MonoBehaviour
         }
 
         timer = timeLimit;
-        UpdateRoundUI();
-        UpdateTimerUI();
         successOverlay.SetActive(false);
         gameOverOverlay.SetActive(false);
+
+        countdownCanvas.SetActive(true);
+        StartCoroutine(StartCountdown());
     }
 
     void Update()
@@ -51,6 +60,25 @@ public class GameController : MonoBehaviour
                 EndGame(false);
             }
         }
+    }
+
+    IEnumerator StartCountdown()
+    {
+        countdownCanvas.SetActive(true);
+        string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+
+        for (int i = 0; i < countdownMessages.Length; i++)
+        {
+            countdownText.text = countdownMessages[i];
+            yield return new WaitForSeconds(1f);
+        }
+
+        countdownCanvas.SetActive(false);
+
+        timer = timeLimit;
+        
+        UpdateRoundUI();
+        UpdateTimerUI();
     }
 
     public void NextRound()
@@ -77,14 +105,29 @@ public class GameController : MonoBehaviour
         timer = 0;
         UpdateTimerUI();
 
-        if (isSuccess)
+        successOverlay.SetActive(isSuccess);
+        gameOverOverlay.SetActive(!isSuccess);
+
+        string playerName = PhotonNetwork.NickName;
+        string missionKey = "Mission_RandomQuiz";
+        string missionResult = isSuccess ? "Complete" : "Fail";
+
+        ExitGames.Client.Photon.Hashtable playerResults = new ExitGames.Client.Photon.Hashtable()
         {
-            successOverlay.SetActive(true);
-        }
-        else
+            { $"{missionKey}_{playerName}", missionResult }
+        };
+        PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
+
+        if (PhotonNetwork.IsMasterClient)
         {
-            gameOverOverlay.SetActive(true);
+            ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
+            {
+                { "CurrentMission", missionKey }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
         }
+
+        Invoke("ChangeToWaitingScene", 2f);
     }
 
     void UpdateRoundUI()
@@ -146,5 +189,10 @@ public class GameController : MonoBehaviour
         {
             Debug.Log("Wrong answer! Try again.");
         }
+    }
+
+    void ChangeToWaitingScene()
+    {
+        PhotonNetwork.LoadLevel("WaitingScene");
     }
 }
