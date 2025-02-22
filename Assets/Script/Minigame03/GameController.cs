@@ -19,7 +19,6 @@ public class GameController : MonoBehaviour
 
     void Start()
     {
-        // Check if UI elements and overlays are assigned
         if (timerText == null || roundText == null || successOverlay == null || gameOverOverlay == null)
         {
             Debug.LogError("UI elements or overlays are not assigned in the inspector!");
@@ -27,97 +26,125 @@ public class GameController : MonoBehaviour
             return;
         }
 
-        timer = timeLimit; // Initialize timer
-        UpdateRoundUI(); // Update initial round UI
-        successOverlay.SetActive(false); // Ensure success overlay is hidden
-        gameOverOverlay.SetActive(false); // Ensure game over overlay is hidden
+        timer = timeLimit;
+        UpdateRoundUI();
+        UpdateTimerUI();
+        successOverlay.SetActive(false);
+        gameOverOverlay.SetActive(false);
     }
 
     void Update()
     {
         if (isGameActive && currentRound <= totalRounds)
         {
-            // Update timer
             timer -= Time.deltaTime;
-            timerText.text = "Time: " + Mathf.Max(0, Mathf.Ceil(timer)).ToString();
+            UpdateTimerUI();
 
-            // Update round UI only if the round has changed
             if (lastUpdatedRound != currentRound)
             {
                 UpdateRoundUI();
-                lastUpdatedRound = currentRound; // Store the last updated round
+                lastUpdatedRound = currentRound;
             }
 
-            // Check if time runs out
             if (timer <= 0)
             {
-                EndGame(false); // Game over when time runs out
+                EndGame(false);
             }
         }
     }
 
-    // Call this function to move to the next round
     public void NextRound()
     {
         if (!isGameActive) return;
 
         if (currentRound < totalRounds)
         {
-            currentRound++; // Move to next round
-            timer = timeLimit; // Reset timer for the new round
+            currentRound++;
+            timer = timeLimit;
+            UpdateTimerUI();
         }
         else
         {
-            EndGame(true); // Complete the mission if all rounds are finished
+            EndGame(true);
         }
     }
 
-    // Show the game status when the game ends
-    void EndGame(bool isSuccess)
+    public void EndGame(bool isSuccess)
     {
         if (!isGameActive) return;
 
-        isGameActive = false; // Stop the game
-        timer = 0; // Stop the timer
+        isGameActive = false;
+        timer = 0;
+        UpdateTimerUI();
 
         if (isSuccess)
         {
-            // Show success overlay
             successOverlay.SetActive(true);
         }
         else
         {
-            // Show game over overlay
             gameOverOverlay.SetActive(true);
         }
     }
 
-    // Update round UI display
     void UpdateRoundUI()
     {
         if (roundText != null)
         {
-            roundText.text = "Round: " + currentRound; // Update round number
+            roundText.text = currentRound + "/" + totalRounds;
         }
     }
 
-    // Optional: You can call this from other scripts if needed to reset the game
+    void UpdateTimerUI()
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(timer / 60);
+            int seconds = Mathf.FloorToInt(timer % 60);
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        }
+    }
+
     public void ResetGame()
     {
         if (!isGameActive) return;
 
-        currentRound = 1; // Reset the round to 1
-        timer = timeLimit; // Reset the timer
-        UpdateRoundUI(); // Update round UI
-        if (timerText != null)
-        {
-            timerText.text = "Time: " + timeLimit.ToString(); // Reset timer UI
-        }
+        currentRound = 1;
+        timer = timeLimit;
+        UpdateRoundUI();
+        UpdateTimerUI();
 
-        // Hide overlays
         if (successOverlay != null) successOverlay.SetActive(false);
         if (gameOverOverlay != null) gameOverOverlay.SetActive(false);
 
-        isGameActive = true; // Reactivate the game
+        isGameActive = true;
+    }
+
+    // ฟังก์ชันเรียกใช้เมื่อผู้เล่นตอบถูก
+    public void CorrectAnswerSelected()
+    {
+        if (!isGameActive) return;
+
+        if (currentRound == totalRounds)
+        {
+            EndGame(true); // แสดง successOverlay ทันทีเมื่อตอบถูกในรอบสุดท้าย
+        }
+        else
+        {
+            NextRound(); // ถ้ายังไม่ถึงรอบสุดท้าย ไปยังรอบถัดไป
+        }
+    }
+
+    // ฟังก์ชันตรวจคำตอบ และเรียก CorrectAnswerSelected() ถ้าถูก
+    public void OnAnswerSelected(bool isCorrect)
+    {
+        if (isCorrect)
+        {
+            CorrectAnswerSelected();
+        }
+        else
+        {
+            Debug.Log("Wrong answer! Try again.");
+        }
     }
 }

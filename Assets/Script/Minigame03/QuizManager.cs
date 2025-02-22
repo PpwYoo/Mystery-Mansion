@@ -26,11 +26,11 @@ public class QuizManager : MonoBehaviour
     public GameObject wrongOverlayPanel;
 
     [Header("Question Data")]
-    public List<QuestionData> fruitQuestionsOriginal;
-    public List<QuestionData> countryQuestionsOriginal;
-    public List<QuestionData> countingQuestionsOriginal;
-    public List<QuestionData> importantPersonQuestionsOriginal;
-    public List<QuestionData> analyticalThinkingQuestionsOriginal;
+    public List<QuestionData> Informations;
+    public List<QuestionData> Mathematics;
+    public List<QuestionData> Country;
+    public List<QuestionData> Analogy;
+    public List<QuestionData> Logical_Reason;
 
     private List<QuestionData> currentQuestionList;
     private QuestionData currentQuestion;
@@ -41,13 +41,12 @@ public class QuizManager : MonoBehaviour
     void Start()
     {
         ResetQuestions();
-        StartRound();
         gameController = FindObjectOfType<GameController>();
+        StartRound();
     }
 
     void Update()
     {
-        // Debug เฉพาะเมื่อ currentRound เปลี่ยนไป
         if (gameController.currentRound != lastLoggedRound)
         {
             Debug.Log("Current Round: " + gameController.currentRound);
@@ -60,24 +59,24 @@ public class QuizManager : MonoBehaviour
         switch (gameController.currentRound)
         {
             case 1:
-                currentQuestionList = new List<QuestionData>(fruitQuestionsOriginal);
-                currentCategoryName = "ผลไม้";
+                currentQuestionList = new List<QuestionData>(Informations);
+                currentCategoryName = "การตีความข้อมูล";
                 break;
             case 2:
-                currentQuestionList = new List<QuestionData>(countryQuestionsOriginal);
-                currentCategoryName = "ประเทศ";
+                currentQuestionList = new List<QuestionData>(Mathematics);
+                currentCategoryName = "ปัญหาคณิตศาสตร์";
                 break;
             case 3:
-                currentQuestionList = new List<QuestionData>(countingQuestionsOriginal);
-                currentCategoryName = "นับจำนวน";
+                currentQuestionList = new List<QuestionData>(Country);
+                currentCategoryName = "ประเทศต่างๆ";
                 break;
             case 4:
-                currentQuestionList = new List<QuestionData>(importantPersonQuestionsOriginal);
-                currentCategoryName = "บุคคลสำคัญ";
+                currentQuestionList = new List<QuestionData>(Analogy);
+                currentCategoryName = "อุปมาอุปไมย";
                 break;
             case 5:
-                currentQuestionList = new List<QuestionData>(analyticalThinkingQuestionsOriginal);
-                currentCategoryName = "คิดวิเคราะห์";
+                currentQuestionList = new List<QuestionData>(Logical_Reason);
+                currentCategoryName = "หาเหตุผลเชิงตรรกะ";
                 break;
             default:
                 Debug.Log("Invalid round!");
@@ -135,6 +134,13 @@ public class QuizManager : MonoBehaviour
     }
 
     IEnumerator HandleCorrectAnswer()
+{
+    if (gameController.currentRound == gameController.totalRounds) 
+    {
+        // ถ้าเป็นคำถามสุดท้าย ให้ขึ้น SuccessPanel ทันที
+        gameController.EndGame(true);
+    }
+    else
     {
         correctOverlayPanel.SetActive(true);
         Time.timeScale = 0f;
@@ -144,6 +150,7 @@ public class QuizManager : MonoBehaviour
         gameController.NextRound();
         StartRound();
     }
+}
 
     IEnumerator HandleWrongAnswer()
     {
