@@ -92,6 +92,10 @@ public class PlayerDisplay : MonoBehaviour
                 {
                     gameStartIIManager.PerformActionForVillain(playerName);
                 }
+                if (gameStartIIManager.issusSelectionActive)
+                {
+                    gameStartIIManager.MissionFailSystem(playerName);
+                }
             }
         }
     }

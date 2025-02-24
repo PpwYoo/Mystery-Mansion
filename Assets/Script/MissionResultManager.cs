@@ -29,7 +29,7 @@ public class MissionResultManager : MonoBehaviourPunCallbacks
         int successThreshold = Mathf.CeilToInt(totalPlayers / 2f);
         int successCount = CountSuccessfulPlayers(missionKey);
 
-        bool missionPassed = successCount >= successThreshold;
+        bool missionPassed = successCount >= successThreshold; // คนผ่านเกินครึ่ง = ภารกิจสำเร็จ
         Debug.Log($"{missionKey} result: {(missionPassed ? "Mission Passed" : "Mission Failed")}");
 
         ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable

@@ -11,6 +11,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     [Header("General Setting")]
     public GameObject playerPrefab;
     public TMP_Text messageText;
+    public TMP_Text timerText;
     public RectTransform[] playerPositions;
     private List<GameObject> currentPlayers = new List<GameObject>();
 
@@ -22,7 +23,6 @@ public class GameStartII : MonoBehaviourPunCallbacks
     { { "Mission_Fingerprint", 0 },{ "Mission_SpotDifference", 1 },{ "Mission_RandomQuiz", 2 },{ "Mission_RightSigns", 3 },{ "Mission_FindTheWay", 4 }};
 
     [Header("Discuss Time")]
-    public TMP_Text timerText;
     public float discussTimeLimit = 10f;
     private float timeRemaining;
 
@@ -40,6 +40,22 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     private string villainselectedPlayer;
     public bool isVillainSelectionActive = false;
+
+    [Header("Mission Fail System")]
+    public GameObject susConfirmationPanel;
+    public TMP_Text susConfirmationText;
+    public TMP_Text susText;
+    
+    private string susSelectedPlayer;
+    public bool issusSelectionActive = false;
+
+    public float susTimeLimit = 10f;
+    private float susTimeRemaining;
+    private bool isSusTimeActive = false;
+
+    private bool isSusVoteResultsFinished = false;
+    private Dictionary<string, int> susVotes = new Dictionary<string, int>();
+    private Dictionary<string, int> susVoteCounts = new Dictionary<string, int>();
 
     IEnumerator Start()
     {
@@ -66,6 +82,15 @@ public class GameStartII : MonoBehaviourPunCallbacks
         {
             Debug.Log($"Last Mission: {lastMissionKey}");
             yield return StartCoroutine(DelayMissionResult((string)lastMissionKey));
+
+            if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue($"Result_{lastMissionKey}", out object result) && result is bool isSuccess && !isSuccess)
+            {
+                yield return StartCoroutine(MissionFail());
+            }
+            else
+            {
+                StartDiscuss();
+            }
         }
         else
         {
@@ -78,8 +103,6 @@ public class GameStartII : MonoBehaviourPunCallbacks
             string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
             SetLeader(leader);
         }
-
-        StartDiscuss();
     }
 
     void SetupPlayers()
@@ -296,12 +319,30 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
+        // คนร้ายเลือกใคร
         if (targetPlayer == PhotonNetwork.LocalPlayer && changedProps.ContainsKey("VillainTarget"))
         {
             Debug.Log($"คนร้ายเลือกเป้าหมาย: {changedProps["VillainTarget"]}");
         }
 
         base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
+
+        // การเก็บค่าการโหวตผู้ต้องสงสัย
+        if (changedProps.ContainsKey("susVotes"))
+        {
+            string votedPlayer = (string)changedProps["susVotes"];
+
+            if (!susVoteCounts.ContainsKey(votedPlayer))
+            {
+                susVoteCounts[votedPlayer] = 1;
+            }
+            else
+            {
+                susVoteCounts[votedPlayer]++;
+            }
+
+            Debug.Log($"ผู้เล่น {votedPlayer} ได้รับ {susVoteCounts[votedPlayer]} โหวต");
+        }
     }
 
     // PlayerDisplay ไหนเป็นของผู้เล่นที่ถูกเลือก
@@ -501,4 +542,201 @@ public class GameStartII : MonoBehaviourPunCallbacks
         yield return new WaitForSeconds(3);
         PhotonNetwork.LoadLevel("MissionSelect");
     } 
+
+    // -----------------------------------------------------------------------------------
+
+    // ถ้าภารกิจล้มเหลว
+    IEnumerator MissionFail()
+    {
+        issusSelectionActive = true;
+
+        string[] missionFailMessages = new string[] { "ในเมื่อภารกิจล้มเหลว", "ในตอนนี้...", "คุณสงสัยใครอยู่ไหม", "เลือกผู้เล่นที่คุณสงสัย" };
+
+        for (int i = 0; i < missionFailMessages.Length; i++)
+        {
+            messageText.text = missionFailMessages[i];
+            yield return new WaitForSeconds(2f);
+        }
+
+        susTimeRemaining = susTimeLimit;
+        isSusTimeActive = true;
+
+        MissionFailSystem(susSelectedPlayer);
+        StartCoroutine(SusTimer());
+    }
+
+    IEnumerator SusTimer()
+    {
+        while (susTimeRemaining > 0)
+        {
+            susTimeRemaining -= Time.deltaTime;
+            timerText.text = Utility.FormatTime(susTimeRemaining);
+            yield return null;
+        }
+
+        isSusTimeActive = false;
+        issusSelectionActive = false;
+        timerText.text = "";
+
+        messageText.text = "หมดเวลาเลือกผู้ต้องสงสัย";
+        yield return new WaitForSeconds(3f);
+
+        SusVoteResults();
+    }
+
+    public void MissionFailSystem(string playerName)
+    {
+        if (!issusSelectionActive || !isSusTimeActive) return;
+        susSelectedPlayer = playerName;
+
+        if (!string.IsNullOrEmpty(playerName))
+        {
+            ShowSusConfirmation(playerName);
+        }
+    }
+
+    public void ShowSusConfirmation(string playerName)
+    {
+        if (!isSusTimeActive) return;
+
+        susSelectedPlayer = playerName;
+        susConfirmationText.text = playerName + " น่าสงสัย?";
+        susConfirmationPanel.SetActive(true);
+
+        PlayerDisplay susSelectedPlayerDisplay = FindPlayerDisplay(playerName);
+        if (susSelectedPlayerDisplay != null)
+        {
+            susSelectedPlayerDisplay.SetOpacity(0.5f);
+        }
+    }
+
+    public void ConfirmSusSelection()
+    {
+        if (!isSusTimeActive || string.IsNullOrEmpty(susSelectedPlayer)) return;
+
+        string localPlayerName = PhotonNetwork.LocalPlayer.NickName;
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable()
+        {
+            { "susVotes", susSelectedPlayer }
+        });
+
+        Debug.Log($"{localPlayerName} โหวตให้ {susSelectedPlayer}");
+
+        PlayerDisplay susSelectedPlayerDisplay = FindPlayerDisplay(susSelectedPlayer);
+        if (susSelectedPlayerDisplay != null)
+        {
+            susSelectedPlayerDisplay.SetOpacity(1f);
+        }
+
+        susConfirmationPanel.SetActive(false);
+        issusSelectionActive = false;
+    }
+
+    public void CancelSusSelection()
+    {
+        if (!isSusTimeActive || string.IsNullOrEmpty(susSelectedPlayer)) return;
+        susConfirmationPanel.SetActive(false);
+
+        PlayerDisplay susSelectedPlayerDisplay = FindPlayerDisplay(susSelectedPlayer);
+        if (susSelectedPlayerDisplay != null)
+        {
+            susSelectedPlayerDisplay.SetOpacity(1f);
+        }
+        
+        susSelectedPlayer = null;   
+    }
+
+    public void SusVoteResults()
+    {
+        if (susVoteCounts.Count > 0)
+        {
+            isSusVoteResultsFinished = false;
+            StartCoroutine(ShowSusVoteResultsOneByOne());
+        }
+        else
+        {
+            StartCoroutine(ShowNoSuspectsAndStartDiscuss());
+        }
+    }
+
+    private IEnumerator ShowNoSuspectsAndStartDiscuss()
+    {
+        messageText.text = "";
+        susText.text = "ไม่มีใครน่าสงสัย";
+
+        yield return new WaitForSeconds(3f);
+        
+        susText.text = "";
+        StartDiscuss();
+    }
+
+    private IEnumerator ShowSusVoteResultsOneByOne()
+    {
+        messageText.text = "";
+
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("LastMission", out object lastMissionKey))
+        {
+            string lastMission = (string)lastMissionKey;
+
+            // เช็คคนที่โดนโหวต >= 2 คะแนน
+            bool hasSuspects = false;
+            foreach (var vote in susVoteCounts)
+            {
+                if (vote.Value >= 2)
+                {
+                    hasSuspects = true;
+                    break;
+                }
+            }
+
+            if (hasSuspects)
+            {
+                susText.text = "มีผู้ต้องสงสัย";
+                yield return new WaitForSeconds(2f);
+
+                susText.text = "มาดูผลภารกิจ\nของผู้ต้องสงสัยกัน";
+                yield return new WaitForSeconds(2f);
+
+                foreach (var vote in susVoteCounts)
+                {
+                    if (vote.Value >= 1)
+                    {
+                        string playerName = vote.Key;
+                        string missionResultKey = $"{lastMission}_{playerName}";
+                        string missionResult = "ไม่มีข้อมูล";
+
+                        foreach (var player in PhotonNetwork.PlayerList)
+                        {
+                            if (player.NickName == playerName && player.CustomProperties.ContainsKey(missionResultKey))
+                            {
+                                missionResult = (string)player.CustomProperties[missionResultKey];
+                                break;
+                            }
+                        }
+
+                        susText.text = "ผลภารกิจของ " + playerName + "\nคือ " + missionResult;
+                        yield return new WaitForSeconds(4f);
+                    }
+                }
+            }
+            else
+            {
+                susText.text = "ไม่มีใครน่าสงสัย";
+                yield return new WaitForSeconds(3f);  
+            }
+        }
+
+        isSusVoteResultsFinished = true;
+        StartDiscussIfReady();
+    }
+
+    private void StartDiscussIfReady()
+    {
+        if (isSusVoteResultsFinished)
+        { 
+            susText.text = "";  
+            StartDiscuss();
+        }
+    }
 }
