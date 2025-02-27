@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class GameStartII : MonoBehaviourPunCallbacks
 {
+    public static GameStartII Instance;
+
     [Header("General Setting")]
     public GameObject playerPrefab;
     public TMP_Text messageText;
@@ -57,6 +59,18 @@ public class GameStartII : MonoBehaviourPunCallbacks
     private Dictionary<string, int> susVotes = new Dictionary<string, int>();
     private Dictionary<string, int> susVoteCounts = new Dictionary<string, int>();
 
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     IEnumerator Start()
     {
         SetupPlayers();
@@ -73,6 +87,12 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
         yield return new WaitUntil(() => PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.PlayerList.Length);
 
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Leader"))
+        {
+            string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
+            SetLeader(leader);
+        }
+
         PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable()
         {
             { "EmployerActionDone", false },{ "VillainActionDone", false }
@@ -85,23 +105,77 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
             if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue($"Result_{lastMissionKey}", out object result) && result is bool isSuccess && !isSuccess)
             {
-                yield return StartCoroutine(MissionFail());
+                int failCount = 0;
+                int successCount = 0;
+
+                foreach (string missionKey in missionPositions.Keys)
+                {
+                    if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey($"Result_{missionKey}"))
+                    {
+                        bool isMissionSuccess = (bool)PhotonNetwork.CurrentRoom.CustomProperties[$"Result_{missionKey}"];
+                        if (!isMissionSuccess)
+                        {
+                            failCount++;
+                        }
+                        else
+                        {
+                            successCount++;
+                        }
+                    }
+                }
+
+                if (failCount == 3)
+                {
+                    yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHunt());
+                }
+                else
+                {
+                    yield return StartCoroutine(MissionFail());
+                }
             }
             else
             {
-                StartDiscuss();
+                int failCount = 0;
+                int successCount = 0;
+
+                foreach (string missionKey in missionPositions.Keys)
+                {
+                    if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey($"Result_{missionKey}"))
+                    {
+                        bool isMissionSuccess = (bool)PhotonNetwork.CurrentRoom.CustomProperties[$"Result_{missionKey}"];
+                        if (!isMissionSuccess)
+                        {
+                            failCount++;
+                        }
+                        else
+                        {
+                            successCount++;
+                        }
+                    }
+                }
+
+                if ((failCount == 3 && successCount == 2) || (failCount == 4 && successCount == 1) || (failCount == 5))
+                {
+                    yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
+                }
+                // else if (failCount == 4 && successCount == 1)
+                // {
+                //     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
+                // }
+                // else if (failCount == 5)
+                // {
+                //     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
+                // }
+                else
+                {
+                    StartDiscuss();
+                }
             }
         }
         else
         {
             messageText.text = "ยังไม่มีผลภารกิจ";
             yield return new WaitForSeconds(3f);
-        }
-
-        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Leader"))
-        {
-            string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
-            SetLeader(leader);
         }
     }
 
@@ -243,7 +317,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
                 }
             }
         }
-        Debug.Log($"Mission Successes: {successCount}, Mission Fails: {failCount}");
+
+        Debug.Log("success : " + successCount + " fail : " + failCount);
     }
 
     void StartDiscuss()
@@ -309,12 +384,12 @@ public class GameStartII : MonoBehaviourPunCallbacks
             }
         }
 
-        CheckMissionResult();
-
         if (propertiesThatChanged.ContainsKey("EmployerActionDone") || propertiesThatChanged.ContainsKey("VillainActionDone"))
         {
             CheckIfBothActionsCompletedAndLoadScene();
         }
+
+        CheckMissionResult();
     }
 
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
@@ -546,7 +621,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     // -----------------------------------------------------------------------------------
 
     // ถ้าภารกิจล้มเหลว
-    IEnumerator MissionFail()
+    public IEnumerator MissionFail()
     {
         issusSelectionActive = true;
 

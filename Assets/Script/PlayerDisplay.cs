@@ -18,6 +18,7 @@ public class PlayerDisplay : MonoBehaviour
 
     private GameStart gameStartManager;
     private GameStartII gameStartIIManager;
+    private FindRoleSetting findRoleSetting;
 
     void Start()
     {
@@ -28,6 +29,7 @@ public class PlayerDisplay : MonoBehaviour
 
         gameStartManager = FindObjectOfType<GameStart>();
         gameStartIIManager = FindObjectOfType<GameStartII>();
+        findRoleSetting = FindObjectOfType<FindRoleSetting>();
 
         if (playerButton != null)
         {
@@ -95,6 +97,14 @@ public class PlayerDisplay : MonoBehaviour
                 if (gameStartIIManager.issusSelectionActive)
                 {
                     gameStartIIManager.MissionFailSystem(playerName);
+                }
+                if (findRoleSetting.isVillainSelectEmployerActive)
+                {
+                    findRoleSetting.VillainFindEmployer(playerName);
+                }
+                if (findRoleSetting.isVillainSelectEmployerFinalActive)
+                {
+                    findRoleSetting.VillainFindEmployerFinal(playerName);
                 }
             }
         }
