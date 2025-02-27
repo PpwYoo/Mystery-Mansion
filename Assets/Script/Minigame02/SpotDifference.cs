@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -53,7 +54,7 @@ public class SpotDifference : MonoBehaviour
         PhotonNetwork.AutomaticallySyncScene = false;
 
         // สุ่มชุดโจทย์
-        currentPuzzleSetIndex = Random.Range(0, puzzleSets.Count);
+        currentPuzzleSetIndex = UnityEngine.Random.Range(0, puzzleSets.Count);
         var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
 
         totalTime = 0;
@@ -77,19 +78,21 @@ public class SpotDifference : MonoBehaviour
     }
 
     void Update()
+{
+    if (isRoundActive)
     {
-        if (isRoundActive)
+        totalTime -= Time.deltaTime;
+        if (totalTime <= 0)
         {
-            totalTime -= Time.deltaTime;
-            if (totalTime <= 0)
-            {
-                totalTime = 0;
-                isTimerRunning = false;
-                EndGame(false);
-            }
-            timerText.text = $"Time: {Mathf.CeilToInt(totalTime)}s";
+            totalTime = 0;
+            isTimerRunning = false;
+            EndGame(false);
         }
+
+        TimeSpan timeSpan = TimeSpan.FromSeconds(totalTime);
+        timerText.text = string.Format("{0:D2}:{1:D2}", timeSpan.Minutes, timeSpan.Seconds);
     }
+}
 
     IEnumerator ShowCountdownAndStart()
     {

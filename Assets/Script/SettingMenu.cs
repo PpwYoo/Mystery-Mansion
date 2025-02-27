@@ -89,5 +89,4 @@ public class SettingMenu : MonoBehaviour
         UpdateButtonImage();
         UpdateSFXButtonImage();
     }
-
 }

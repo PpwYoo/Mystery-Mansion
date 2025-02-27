@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -148,11 +149,11 @@ public class FindTheWaySetting : MonoBehaviour
 
             for (int i = 0; i < traps.Length; i++)
             {
-                traps[i] = new Vector2(Random.Range(0, gridSize), Random.Range(0, gridSize));
+                traps[i] = new Vector2(UnityEngine.Random.Range(0, gridSize), UnityEngine.Random.Range(0, gridSize));
 
                 while (traps[i] == goal || traps[i] == new Vector2(0, 0) || IsDuplicateTrap(traps, traps[i], i))
                 {
-                    traps[i] = new Vector2(Random.Range(0, gridSize), Random.Range(0, gridSize));
+                    traps[i] = new Vector2(UnityEngine.Random.Range(0, gridSize), UnityEngine.Random.Range(0, gridSize));
                 }
             }
             trapsValid = CheckIfPathIsValid(traps, goal);
@@ -311,9 +312,10 @@ public class FindTheWaySetting : MonoBehaviour
     }
 
     void UpdateTimerUI()
-    {
-        timerText.text = $"{Mathf.CeilToInt(totalGameTime)}s";
-    }
+{
+    TimeSpan timeSpan = TimeSpan.FromSeconds(totalGameTime);
+    timerText.text = $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+}
 
     void ChangeToWaitingScene()
     {
