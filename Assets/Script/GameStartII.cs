@@ -5,6 +5,7 @@ using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.UI;
+using System.Linq;
 
 public class GameStartII : MonoBehaviourPunCallbacks
 {
@@ -158,14 +159,10 @@ public class GameStartII : MonoBehaviourPunCallbacks
                 {
                     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
                 }
-                // else if (failCount == 4 && successCount == 1)
-                // {
-                //     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
-                // }
-                // else if (failCount == 5)
-                // {
-                //     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
-                // }
+                else if (successCount >= 3)
+                {
+                    yield return StartCoroutine(FindRoleSetting.Instance.ActivateDetectiveHunt());
+                }
                 else
                 {
                     StartDiscuss();
@@ -177,6 +174,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
             messageText.text = "ยังไม่มีผลภารกิจ";
             yield return new WaitForSeconds(3f);
         }
+
+        CheckMissionResult();
     }
 
     void SetupPlayers()
@@ -319,9 +318,16 @@ public class GameStartII : MonoBehaviourPunCallbacks
         }
 
         Debug.Log("success : " + successCount + " fail : " + failCount);
+
+        int currentRound = successCount + failCount;
+        Debug.Log("จำนวนรอบที่ผ่านไป: " + currentRound);
+
+        ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable();
+        roomProperties["CurrentRound"] = currentRound;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
     }
 
-    void StartDiscuss()
+    public void StartDiscuss()
     {
         timeRemaining = discussTimeLimit;
         messageText.text = "สนทนากัน";
@@ -388,8 +394,6 @@ public class GameStartII : MonoBehaviourPunCallbacks
         {
             CheckIfBothActionsCompletedAndLoadScene();
         }
-
-        CheckMissionResult();
     }
 
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
@@ -802,8 +806,29 @@ public class GameStartII : MonoBehaviourPunCallbacks
             }
         }
 
-        isSusVoteResultsFinished = true;
-        StartDiscussIfReady();
+        int successCount = 0;
+        foreach (string missionKey in missionPositions.Keys)
+        {
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey($"Result_{missionKey}"))
+            {
+                bool isMissionSuccess = (bool)PhotonNetwork.CurrentRoom.CustomProperties[$"Result_{missionKey}"];
+                if (isMissionSuccess)
+                {
+                    successCount++;
+                }
+            }
+        }
+
+        if (successCount >= 3)
+        {
+            susText.text = "";
+            yield return StartCoroutine(FindRoleSetting.Instance.ActivateDetectiveHunt());
+        }
+        else
+        {
+            isSusVoteResultsFinished = true;
+            StartDiscussIfReady();
+        }
     }
 
     private void StartDiscussIfReady()

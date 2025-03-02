@@ -106,6 +106,10 @@ public class PlayerDisplay : MonoBehaviour
                 {
                     findRoleSetting.VillainFindEmployerFinal(playerName);
                 }
+                if (findRoleSetting.isGoodSelectBadActive)
+                {
+                    findRoleSetting.FindVillainSystem(playerName);
+                }
             }
         }
     }
