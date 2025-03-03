@@ -868,15 +868,15 @@ MonoBehaviour:
   continueButton: {fileID: 828000447}
   buttonLabel: {fileID: 687759850}
   introSteps:
-  - backgroundImage: {fileID: 21300000, guid: 2a213733dbf9a48cf83d0c4e9d2c77aa, type: 3}
+  - backgroundImage: {fileID: 0}
     storyText: Story no.1
     isNameInputStep: 0
     buttonText: "\u0E15\u0E48\u0E2D\u0E44\u0E1B"
-  - backgroundImage: {fileID: 21300000, guid: 9333470ffbaa545bda3e149c06f1f663, type: 3}
+  - backgroundImage: {fileID: 0}
     storyText: Story no.2
     isNameInputStep: 0
     buttonText: "\u0E15\u0E48\u0E2D\u0E44\u0E1B"
-  - backgroundImage: {fileID: 21300000, guid: a89768d63384841778c8bd79e3180155, type: 3}
+  - backgroundImage: {fileID: 0}
     storyText: "\u0E04\u0E38\u0E13\u0E0A\u0E37\u0E48\u0E2D\u0E2D\u0E30\u0E44\u0E23"
     isNameInputStep: 1
     buttonText: "\u0E25\u0E07\u0E19\u0E32\u0E21"
@@ -1436,5 +1436,5 @@ SceneRoots:
   m_Roots:
   - {fileID: 1030706542}
   - {fileID: 1227339190}
-  - {fileID: 2066053223}
   - {fileID: 1072618094}
+  - {fileID: 2066053223}

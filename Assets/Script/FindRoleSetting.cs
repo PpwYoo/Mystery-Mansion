@@ -357,6 +357,9 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         {
             allConfirmationPanel.SetActive(false);
         }
+
+        allSelectedPlayer = null;
+        allVoteCounts.Clear(); 
         
         isGoodSelectBadActive = true;
 
@@ -577,6 +580,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
     public IEnumerator EndGameProcess()
     {
+        allConfirmationPanel.SetActive(false);
+
         int currentRound = 0;
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("CurrentRound"))
         {
