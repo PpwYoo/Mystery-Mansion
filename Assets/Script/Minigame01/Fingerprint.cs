@@ -4,62 +4,62 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Photon.Pun;
+using System.Linq;
 
 public class Fingerprint : MonoBehaviour
 {
-    // --- Data Class สำหรับคำถาม ---
     [System.Serializable]
     public class QuestionData
     {
         public Sprite questionImage;
+        public Sprite HintFP;
         public Sprite[] choices;
         public Sprite[] selectedFrameSprites;
         public int correctAnswerIndex;
     }
 
-    // --- Public Variables ---
     [Header("Question")]
     public QuestionData[] questions;
 
     [Header("Button")]
-    public Button[] choiceButtons; public Button submitButton;
+    public Button[] choiceButtons;
+    public Button submitButton;
 
     [Header("GameObject")]
-    public GameObject questionCanvas; public GameObject mapCanvas;
-    public GameObject answerWrongPanel; public GameObject answerCorrectPanel;
-    public GameObject mapGameOverPanel; public GameObject questionGameOverPanel; 
-    public GameObject finishedPanel; public GameObject countdownPanel;
+    public GameObject questionCanvas, mapCanvas, answerCorrectPanel, mapGameOverPanel, questionGameOverPanel, finishedPanel, countdownPanel;
 
     [Header("Image")]
-    public Image questionImage; public Image[] levelIcons;
+    public Image questionImage;
+    public Image hintFPImageUI;
+    public Image[] levelIcons;
 
     [Header("Text")]
-    public TMP_Text mapTimerText; public TMP_Text questionTimerText; public TMP_Text countdownText;
+    public TMP_Text mapTimerText, questionTimerText, countdownText, answerWrongText;
 
-    // --- Events ---
     public delegate void GameOverHandler();
     public event GameOverHandler OnGameOver;
 
     public delegate void MissionCompletedHandler();
     public event MissionCompletedHandler OnMissionCompleted;
 
-    // --- Private Variables ---
     private float timer = 120f;
     private bool isTimerRunning = false;
     private QuestionData currentQuestion;
     private int selectedAnswerIndex = -1;
     private int currentLevel = 0;
     private int totalLevels;
+    private bool isGameOver = false;
+    private List<QuestionData> shuffledQuestions = new List<QuestionData>();
 
-    // --- Unity Lifecycle Methods ---
     void Start()
     {
-        // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
-
         totalLevels = questions.Length;
         submitButton.interactable = false;
         submitButton.onClick.AddListener(SubmitAnswer);
+
+        // สุ่มลำดับโจทย์แต่คงลำดับตัวเลือก
+        shuffledQuestions = questions.OrderBy(q => Random.value).ToList();
 
         countdownPanel.SetActive(true);
         mapCanvas.SetActive(false);
@@ -75,285 +75,260 @@ public class Fingerprint : MonoBehaviour
     IEnumerator StartCountdown()
     {
         countdownPanel.SetActive(true);
-        string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+        string[] countdownMessages = { "3", "2", "1", "Start!" };
 
-        for (int i = 0; i < countdownMessages.Length; i++)
+        foreach (var msg in countdownMessages)
         {
-            countdownText.text = countdownMessages[i];
+            countdownText.text = msg;
             yield return new WaitForSeconds(1f);
         }
 
         countdownPanel.SetActive(false);
-
         ShowMap();
         StartTimer();
     }
 
-    // --- Timer Methods ---
     public void StartTimer()
     {
         if (!isTimerRunning)
         {
             isTimerRunning = true;
-            timer = 120f; // ตั้งเวลาเริ่มต้นที่ 120 วินาที
+            timer = 120f;
         }
     }
-
-    private bool isGameOver = false; // Flag สำหรับตรวจสอบว่า GameOverPanel ถูกแสดงแล้วหรือไม่
 
     private void UpdateTimer()
     {
         if (isTimerRunning && !isGameOver)
         {
             timer -= Time.deltaTime;
-
             if (timer <= 0)
             {
                 timer = 0;
                 isTimerRunning = false;
-
-                // เรียก Game Over Panel ทันทีเมื่อหมดเวลา
-                isGameOver = true; // ป้องกันการเรียกซ้ำ
-                if (mapCanvas.activeSelf)
-                {
-                    ShowGameOverPanel(false); // แสดง GameOverPanel สำหรับ MapCanvas
-                }
-                else if (questionCanvas.activeSelf)
-                {
-                    ShowGameOverPanel(true); // แสดง GameOverPanel สำหรับ QuestionCanvas
-                }
+                isGameOver = true;
+                ShowGameOverPanel(mapCanvas.activeSelf);
             }
 
-            // แปลงเวลาเป็นนาทีและวินาที
             int minutes = Mathf.FloorToInt(timer / 60);
             int seconds = Mathf.FloorToInt(timer % 60);
-
-            // อัปเดตข้อความเวลาในรูปแบบ 00:00
             string timeFormatted = $"{minutes:D2}:{seconds:D2}";
-            mapTimerText.text = $"{timeFormatted}";
-            questionTimerText.text = $"{timeFormatted}";
+
+            mapTimerText.text = timeFormatted;
+            questionTimerText.text = timeFormatted;
         }
     }
 
-    // --- UI Navigation Methods ---
     public void ShowMap()
     {
         mapCanvas.SetActive(true);
         questionCanvas.SetActive(false);
-        answerWrongPanel.SetActive(false);
+        answerWrongText.gameObject.SetActive(false);
         answerCorrectPanel.SetActive(false);
 
         for (int i = 0; i < levelIcons.Length; i++)
         {
-            Image levelIconImage = levelIcons[i];
             Button levelButton = levelIcons[i].GetComponent<Button>();
-
-            if (i < currentLevel)
+            levelIcons[i].color = i == currentLevel ? Color.white : Color.gray;
+            if (levelButton != null)
             {
-                if (levelButton != null) levelButton.interactable = false;
-            }
-            else if (i == currentLevel)
-            {
-                levelIconImage.color = Color.white; // สีปกติ
-                if (levelButton != null)
-                {
-                    levelButton.interactable = true;
-                    levelButton.onClick.RemoveAllListeners();
-                    int levelIndex = i;
-                    levelButton.onClick.AddListener(() => ShowQuestion(levelIndex));
-                }
-            }
-            else
-            {
-                levelIconImage.color = Color.gray; // สีจางสำหรับด่านที่ยังไม่ปลดล็อก
-                if (levelButton != null) levelButton.interactable = false;
+                levelButton.interactable = i == currentLevel;
+                levelButton.onClick.RemoveAllListeners();
+                int levelIndex = i;
+                levelButton.onClick.AddListener(() => ShowQuestion(levelIndex));
             }
         }
     }
 
     public void ShowQuestion(int questionIndex)
+{
+    if (questionIndex >= totalLevels)
     {
-        if (questionIndex >= totalLevels)
-        {
-            MissionCompleted();
-            return;
-        }
-
-        mapCanvas.SetActive(false);
-        questionCanvas.SetActive(true);
-
-        currentQuestion = questions[questionIndex];
-        questionImage.sprite = currentQuestion.questionImage;
-
-        for (int i = 0; i < choiceButtons.Length; i++)
-        {
-            if (i < currentQuestion.choices.Length)
-            {
-                choiceButtons[i].image.sprite = currentQuestion.choices[i];
-                choiceButtons[i].gameObject.SetActive(true);
-
-                int choiceIndex = i;
-                choiceButtons[i].onClick.RemoveAllListeners();
-                choiceButtons[i].onClick.AddListener(() => OnChoiceSelected(choiceIndex));
-            }
-            else
-            {
-                choiceButtons[i].gameObject.SetActive(false);
-            }
-        }
-
-        selectedAnswerIndex = -1;
-        submitButton.interactable = false;
+        MissionCompleted();
+        return;
     }
 
-    // --- Answer Selection Methods ---
+    mapCanvas.SetActive(false);
+    questionCanvas.SetActive(true);
+
+    currentQuestion = shuffledQuestions[questionIndex];
+    questionImage.sprite = currentQuestion.questionImage;
+
+    // แสดงภาพโจทย์ลายนิ้วมือ (HintFP)
+    if (currentQuestion.HintFP != null)
+    {
+        hintFPImageUI.sprite = currentQuestion.HintFP;
+        hintFPImageUI.gameObject.SetActive(true);
+    }
+    else
+    {
+        hintFPImageUI.gameObject.SetActive(false);
+    }
+
+    // แสดงตัวเลือกตามลำดับเดิม
+    for (int i = 0; i < choiceButtons.Length; i++)
+    {
+        if (i < currentQuestion.choices.Length)
+        {
+            choiceButtons[i].image.sprite = currentQuestion.choices[i];
+            choiceButtons[i].gameObject.SetActive(true);
+            int choiceIndex = i;
+            choiceButtons[i].onClick.RemoveAllListeners();
+            choiceButtons[i].onClick.AddListener(() => OnChoiceSelected(choiceIndex));
+        }
+        else
+        {
+            choiceButtons[i].gameObject.SetActive(false);
+        }
+    }
+
+    selectedAnswerIndex = -1;
+    submitButton.interactable = false;
+}
+
+    public void SubmitAnswer()
+{
+    if (selectedAnswerIndex == -1) return;
+
+    if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
+    {
+        Debug.Log("Correct Answer!");
+
+        if (currentLevel == 4)
+        {
+            MissionCompleted();
+        }
+        else
+        {
+            StartCoroutine(ShowCorrectAnswerPanel());
+        }
+    }
+    else
+    {
+        Debug.Log("Wrong Answer! Try again.");
+        StartCoroutine(ShowWrongAnswerMessage());
+    }
+}
+
+    private bool canSelect = true; // ควบคุมการเลือกคำตอบและกดปุ่ม
+
+    IEnumerator ShowWrongAnswerMessage()
+{
+    canSelect = false; // ปิดการเลือกคำตอบและปุ่มยืนยัน
+    submitButton.interactable = false; // ปิดปุ่มยืนยัน
+    answerWrongText.gameObject.SetActive(true);
+    answerWrongText.text = "ผิด!! เลือกใหม่อีกครั้ง";
+
+    yield return new WaitForSeconds(3f);
+
+    answerWrongText.gameObject.SetActive(false);
+    canSelect = true; // เปิดให้เลือกคำตอบได้อีกครั้ง
+    submitButton.interactable = true; // เปิดปุ่มยืนยัน
+
+    // แสดงคำถามเดิม ให้เลือกใหม่จนกว่าจะตอบถูก
+    ShowQuestion(currentLevel);
+}
+
+    // ตรวจสอบ canSelect ก่อนให้เลือกคำตอบ
     public void OnChoiceSelected(int index)
     {
+        if (!canSelect) return; // ถ้ากดไม่ได้ ให้ return ออกไป
+
         selectedAnswerIndex = index;
         Debug.Log($"Selected Answer: {index}");
 
         for (int i = 0; i < choiceButtons.Length; i++)
         {
-            choiceButtons[i].image.sprite = i == index 
-                ? currentQuestion.selectedFrameSprites[i] 
-                : currentQuestion.choices[i];
+            choiceButtons[i].image.sprite = i == index ? currentQuestion.selectedFrameSprites[i] : currentQuestion.choices[i];
         }
-
         submitButton.interactable = true;
     }
 
-    public void SubmitAnswer()
+    // ตรวจสอบ canSelect ก่อนให้กดปุ่มยืนยัน
+    public void OnConfirmButtonPressed()
     {
-        if (selectedAnswerIndex == -1) return;
-
-        if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
-        {
-            Debug.Log("Correct Answer!");
-        
-            // ถ้าเป็นด่านสุดท้าย แสดง MissionCompleted
-            if (currentLevel == totalLevels - 1)
-            {
-                MissionCompleted();
-            }
-            else
-            {
-                StartCoroutine(ShowCorrectAnswerPanel());
-            }
-        }
-        else
-        {
-            Debug.Log("Wrong Answer! Try again.");
-            StartCoroutine(ShowWrongAnswerPanel());
-        }
-    }
-
-    // --- Panel Display Methods ---
-    IEnumerator ShowWrongAnswerPanel()
-    {
-        answerWrongPanel.SetActive(true);
-        yield return new WaitForSeconds(2f);
-        answerWrongPanel.SetActive(false);
-        ShowQuestion(currentLevel); // กลับไปถามใหม่
+        if (!canSelect) return; // ถ้ากดไม่ได้ ให้ return ออกไป
+        SubmitAnswer();
     }
 
     IEnumerator ShowCorrectAnswerPanel()
+{
+    answerCorrectPanel.SetActive(true);
+    yield return new WaitForSeconds(2f);
+    answerCorrectPanel.SetActive(false);
+
+    currentLevel++;
+
+    if (currentLevel <= 4) 
     {
-        answerCorrectPanel.SetActive(true);
-        yield return new WaitForSeconds(2f);
-        answerCorrectPanel.SetActive(false);
-
-        currentLevel++; // เพิ่มเลเวลหลังจากผ่านด่าน
-
-        if (currentLevel < totalLevels)
-        {
-            ShowMap();
-        }
-        else
-        {
-            MissionCompleted(); // แสดง Finished Panel หากผ่านด่านสุดท้าย
-        }
+        ShowMap();
     }
+    else 
+    {
+        MissionCompleted();
+    }
+}
 
     public void ShowGameOverPanel(bool isInQuestionCanvas)
     {
-        OnGameOver?.Invoke(); // เรียก Event เมื่อเกมจบ
-
-        // ปิด Panel ที่ไม่เกี่ยวข้อง
-        answerWrongPanel.SetActive(false);
+        OnGameOver?.Invoke();
+        answerWrongText.gameObject.SetActive(false);
         answerCorrectPanel.SetActive(false);
 
-        // บันทึกผลใน Photon
         string playerName = PhotonNetwork.NickName;
         string missionKey = "Mission_Fingerprint";
         string missionResult = "Fail";
 
-        ExitGames.Client.Photon.Hashtable playerResults = new ExitGames.Client.Photon.Hashtable()
-        {
-            { $"{missionKey}_{playerName}", missionResult }
-        };
-        PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { $"{missionKey}_{playerName}", missionResult } });
 
         if (PhotonNetwork.IsMasterClient)
         {
-            ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
-            {
-                { "CurrentMission", missionKey }
-            };
-            PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "CurrentMission", missionKey } });
         }
 
         if (isInQuestionCanvas)
         {
-            // เวลาหมดใน QuestionCanvas
             mapCanvas.SetActive(false);
-            questionCanvas.SetActive(true); // ยังคงแสดง QuestionCanvas
-            questionGameOverPanel.SetActive(true); // แสดง Panel เฉพาะของ QuestionCanvas
-            Debug.Log("Game Over: Time ran out in QuestionCanvas");
+            questionCanvas.SetActive(true);
+            questionGameOverPanel.SetActive(true);
         }
         else
         {
-            // เวลาหมดใน MapCanvas
             questionCanvas.SetActive(false);
-            mapCanvas.SetActive(true); // ยังคงแสดง MapCanvas
-            mapGameOverPanel.SetActive(true); // แสดง Panel เฉพาะของ MapCanvas
-            Debug.Log("Game Over: Time ran out in MapCanvas");
+            mapCanvas.SetActive(true);
+            mapGameOverPanel.SetActive(true);
         }
 
         StartCoroutine(WaitAndChangeScene(2f));
     }
 
     public void MissionCompleted()
+{
+    OnMissionCompleted?.Invoke();
+    questionCanvas.SetActive(true);
+    mapCanvas.SetActive(false);
+    answerCorrectPanel.SetActive(false);
+    questionGameOverPanel.SetActive(false);
+    mapGameOverPanel.SetActive(false);
+    finishedPanel.SetActive(true);
+
+    string playerName = PhotonNetwork.NickName;
+    string missionKey = "Mission_Fingerprint";
+    string missionResult = "Complete";
+
+    PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { $"{missionKey}_{playerName}", missionResult } });
+
+    if (PhotonNetwork.IsMasterClient)
     {
-        OnMissionCompleted?.Invoke();
-        finishedPanel.SetActive(true);
-        mapCanvas.SetActive(false);
-
-        // บันทึกผลใน Photon
-        string playerName = PhotonNetwork.NickName;
-        string missionKey = "Mission_Fingerprint";
-        string missionResult = "Complete";
-
-        ExitGames.Client.Photon.Hashtable playerResults = new ExitGames.Client.Photon.Hashtable()
-        {
-            { $"{missionKey}_{playerName}", missionResult }
-        };
-        PhotonNetwork.LocalPlayer.SetCustomProperties(playerResults);
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable()
-            {
-                { "CurrentMission", missionKey }
-            };
-            PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
-        }
-
-        StartCoroutine(WaitAndChangeScene(2f));
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "CurrentMission", missionKey } });
     }
+
+    StartCoroutine(WaitAndChangeScene(2f));
+}
 
     IEnumerator WaitAndChangeScene(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        PhotonNetwork.LoadLevel("WaitingScene");
-    }
+{
+    yield return new WaitForSeconds(delay);
+    PhotonNetwork.LoadLevel("WaitingScene");
+}
 }

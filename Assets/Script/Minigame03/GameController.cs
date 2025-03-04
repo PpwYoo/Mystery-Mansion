@@ -134,7 +134,7 @@ public class GameController : MonoBehaviour
     {
         if (roundText != null)
         {
-            roundText.text = currentRound + "/" + totalRounds;
+            roundText.text = $"รอบที่ {currentRound}/{totalRounds}";
         }
     }
 

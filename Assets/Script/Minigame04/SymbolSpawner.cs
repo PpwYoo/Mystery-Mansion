@@ -89,7 +89,7 @@ public class SymbolSpawner : MonoBehaviour
         timerText.gameObject.SetActive(true);
         instructionText.gameObject.SetActive(true);
         roundText.gameObject.SetActive(true);
-        roundText.text = $"{round}/{maxRounds}";
+        roundText.text = $"รอบที่ {round}/{maxRounds}";
 
         // Clear Previous Symbols
         foreach (var symbol in spawnedSymbols)
@@ -175,7 +175,7 @@ public class SymbolSpawner : MonoBehaviour
         }
 
         // Configure Selection Panel
-        selectionRoundText.text = $"{round}/{maxRounds}";
+        selectionRoundText.text = $"รอบที่ {round}/{maxRounds}";
         selectionPanel.SetActive(true);
         selectionGrid.gameObject.SetActive(true);
 

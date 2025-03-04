@@ -132,7 +132,7 @@ public class FindTheWaySetting : MonoBehaviour
         }
 
         currentRound++;
-        roundText.text = $"{currentRound}/5";
+        roundText.text = $"รอบที่ {currentRound}/5";
 
         int numberOfTraps = 5 + currentRound;
 
@@ -287,7 +287,7 @@ public class FindTheWaySetting : MonoBehaviour
         goalImage.gameObject.SetActive(false);
         
         resultCanvas.SetActive(true);
-        resultText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
+        resultText.text = isSuccess ? "MISSION COMPLETED" : "MISSION FAILED";
 
         string playerName = PhotonNetwork.NickName;
         string missionKey = "Mission_FindTheWay";

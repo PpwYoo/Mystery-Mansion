@@ -139,10 +139,10 @@ public class GameStart : MonoBehaviourPunCallbacks
         lineShowPanel.SetActive(true);
 
         yield return new WaitForSeconds(1);
-        randomRoleText.text = "ณ ที่แห่งนี้..";
+        randomRoleText.text = "ณ ที่แห่งนี้";
 
         yield return new WaitForSeconds(3);
-        randomRoleText.text = "บทบาทของคุณคือ...";
+        randomRoleText.text = "บทบาทของคุณคือ";
         yield return new WaitForSeconds(3);
 
         AssignRoles();

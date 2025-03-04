@@ -14,7 +14,7 @@ public class SpotDifference : MonoBehaviour
         public Sprite topImage;
         public Sprite bottomImage;
         public List<Button> differencePoints;
-        public float roundTimer = 40f;
+        public float roundTimer = 30f;
     }
 
     [System.Serializable]
@@ -29,7 +29,6 @@ public class SpotDifference : MonoBehaviour
     public TMP_Text timerText;
     public TMP_Text roundText;
     public TMP_Text messageText;
-    public TMP_Text startText;
 
     private int currentRound = 0;
     private int currentPuzzleSetIndex = 0;
@@ -190,7 +189,7 @@ public class SpotDifference : MonoBehaviour
     void EndGame(bool isSuccess)
     { 
         resultCanvas.SetActive(true);  
-        resultText.text = isSuccess ? "Mission Complete!" : "Mission Fail!";
+        resultText.text = isSuccess ? "MISSION COMPLETED" : "MISSION FAILED";
         
         string playerName = PhotonNetwork.NickName;
         string missionKey = "Mission_SpotDifference";
