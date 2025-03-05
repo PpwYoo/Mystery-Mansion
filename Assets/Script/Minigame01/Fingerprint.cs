@@ -141,93 +141,93 @@ public class Fingerprint : MonoBehaviour
     }
 
     public void ShowQuestion(int questionIndex)
-{
-    if (questionIndex >= totalLevels)
     {
-        MissionCompleted();
-        return;
-    }
-
-    mapCanvas.SetActive(false);
-    questionCanvas.SetActive(true);
-
-    currentQuestion = shuffledQuestions[questionIndex];
-    questionImage.sprite = currentQuestion.questionImage;
-
-    // แสดงภาพโจทย์ลายนิ้วมือ (HintFP)
-    if (currentQuestion.HintFP != null)
-    {
-        hintFPImageUI.sprite = currentQuestion.HintFP;
-        hintFPImageUI.gameObject.SetActive(true);
-    }
-    else
-    {
-        hintFPImageUI.gameObject.SetActive(false);
-    }
-
-    // แสดงตัวเลือกตามลำดับเดิม
-    for (int i = 0; i < choiceButtons.Length; i++)
-    {
-        if (i < currentQuestion.choices.Length)
-        {
-            choiceButtons[i].image.sprite = currentQuestion.choices[i];
-            choiceButtons[i].gameObject.SetActive(true);
-            int choiceIndex = i;
-            choiceButtons[i].onClick.RemoveAllListeners();
-            choiceButtons[i].onClick.AddListener(() => OnChoiceSelected(choiceIndex));
-        }
-        else
-        {
-            choiceButtons[i].gameObject.SetActive(false);
-        }
-    }
-
-    selectedAnswerIndex = -1;
-    submitButton.interactable = false;
-}
-
-    public void SubmitAnswer()
-{
-    if (selectedAnswerIndex == -1) return;
-
-    if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
-    {
-        Debug.Log("Correct Answer!");
-
-        if (currentLevel == 4)
+        if (questionIndex >= totalLevels)
         {
             MissionCompleted();
+            return;
+        }
+
+        mapCanvas.SetActive(false);
+        questionCanvas.SetActive(true);
+
+        currentQuestion = shuffledQuestions[questionIndex];
+        questionImage.sprite = currentQuestion.questionImage;
+
+        // แสดงภาพโจทย์ลายนิ้วมือ (HintFP)
+        if (currentQuestion.HintFP != null)
+        {
+            hintFPImageUI.sprite = currentQuestion.HintFP;
+            hintFPImageUI.gameObject.SetActive(true);
         }
         else
         {
-            StartCoroutine(ShowCorrectAnswerPanel());
+            hintFPImageUI.gameObject.SetActive(false);
+        }
+
+        // แสดงตัวเลือกตามลำดับเดิม
+        for (int i = 0; i < choiceButtons.Length; i++)
+        {
+            if (i < currentQuestion.choices.Length)
+            {
+                choiceButtons[i].image.sprite = currentQuestion.choices[i];
+                choiceButtons[i].gameObject.SetActive(true);
+                int choiceIndex = i;
+                choiceButtons[i].onClick.RemoveAllListeners();
+                choiceButtons[i].onClick.AddListener(() => OnChoiceSelected(choiceIndex));
+            }
+            else
+            {
+                choiceButtons[i].gameObject.SetActive(false);
+            }
+        }
+
+        selectedAnswerIndex = -1;
+        submitButton.interactable = false;
+    }
+
+    public void SubmitAnswer()
+    {
+        if (selectedAnswerIndex == -1) return;
+
+        if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
+        {
+            Debug.Log("Correct Answer!");
+
+            if (currentLevel == 4)
+            {
+                MissionCompleted();
+            }
+            else
+            {
+                StartCoroutine(ShowCorrectAnswerPanel());
+            }
+        }
+        else
+        {
+            Debug.Log("Wrong Answer! Try again.");
+            StartCoroutine(ShowWrongAnswerMessage());
         }
     }
-    else
-    {
-        Debug.Log("Wrong Answer! Try again.");
-        StartCoroutine(ShowWrongAnswerMessage());
-    }
-}
 
     private bool canSelect = true; // ควบคุมการเลือกคำตอบและกดปุ่ม
 
     IEnumerator ShowWrongAnswerMessage()
-{
-    canSelect = false; // ปิดการเลือกคำตอบและปุ่มยืนยัน
-    submitButton.interactable = false; // ปิดปุ่มยืนยัน
-    answerWrongText.gameObject.SetActive(true);
-    answerWrongText.text = "ผิด!! เลือกใหม่อีกครั้ง";
+    {
+        canSelect = false; // ปิดการเลือกคำตอบและปุ่มยืนยัน
+        submitButton.interactable = false; // ปิดปุ่มยืนยัน
+        answerWrongText.gameObject.SetActive(true);
+        answerWrongText.text = "ผิด!! เลือกใหม่อีกครั้ง";
 
-    yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(3f);
 
-    answerWrongText.gameObject.SetActive(false);
-    canSelect = true; // เปิดให้เลือกคำตอบได้อีกครั้ง
-    submitButton.interactable = true; // เปิดปุ่มยืนยัน
+        answerWrongText.gameObject.SetActive(false);
+        canSelect = true; // เปิดให้เลือกคำตอบได้อีกครั้ง
+        submitButton.interactable = true; // เปิดปุ่มยืนยัน
 
-    // แสดงคำถามเดิม ให้เลือกใหม่จนกว่าจะตอบถูก
-    ShowQuestion(currentLevel);
-}
+        // แสดงคำถามเดิม ให้เลือกใหม่จนกว่าจะตอบถูก
+        ShowQuestion(currentLevel);
+    }
 
     // ตรวจสอบ canSelect ก่อนให้เลือกคำตอบ
     public void OnChoiceSelected(int index)
@@ -252,22 +252,22 @@ public class Fingerprint : MonoBehaviour
     }
 
     IEnumerator ShowCorrectAnswerPanel()
-{
-    answerCorrectPanel.SetActive(true);
-    yield return new WaitForSeconds(2f);
-    answerCorrectPanel.SetActive(false);
-
-    currentLevel++;
-
-    if (currentLevel <= 4) 
     {
-        ShowMap();
+        answerCorrectPanel.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        answerCorrectPanel.SetActive(false);
+
+        currentLevel++;
+
+        if (currentLevel <= 4) 
+        {
+            ShowMap();
+        }
+        else 
+        {
+            MissionCompleted();
+        }
     }
-    else 
-    {
-        MissionCompleted();
-    }
-}
 
     public void ShowGameOverPanel(bool isInQuestionCanvas)
     {
@@ -303,32 +303,32 @@ public class Fingerprint : MonoBehaviour
     }
 
     public void MissionCompleted()
-{
-    OnMissionCompleted?.Invoke();
-    questionCanvas.SetActive(true);
-    mapCanvas.SetActive(false);
-    answerCorrectPanel.SetActive(false);
-    questionGameOverPanel.SetActive(false);
-    mapGameOverPanel.SetActive(false);
-    finishedPanel.SetActive(true);
-
-    string playerName = PhotonNetwork.NickName;
-    string missionKey = "Mission_Fingerprint";
-    string missionResult = "Complete";
-
-    PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { $"{missionKey}_{playerName}", missionResult } });
-
-    if (PhotonNetwork.IsMasterClient)
     {
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "CurrentMission", missionKey } });
+        OnMissionCompleted?.Invoke();
+        questionCanvas.SetActive(true);
+        mapCanvas.SetActive(false);
+        answerCorrectPanel.SetActive(false);
+        questionGameOverPanel.SetActive(false);
+        mapGameOverPanel.SetActive(false);
+        finishedPanel.SetActive(true);
+
+        string playerName = PhotonNetwork.NickName;
+        string missionKey = "Mission_Fingerprint";
+        string missionResult = "Complete";
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { $"{missionKey}_{playerName}", missionResult } });
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "CurrentMission", missionKey } });
+        }
+
+        StartCoroutine(WaitAndChangeScene(2f));
     }
 
-    StartCoroutine(WaitAndChangeScene(2f));
-}
-
     IEnumerator WaitAndChangeScene(float delay)
-{
-    yield return new WaitForSeconds(delay);
-    PhotonNetwork.LoadLevel("WaitingScene");
-}
+    {
+        yield return new WaitForSeconds(delay);
+        PhotonNetwork.LoadLevel("WaitingScene");
+    }
 }

@@ -49,6 +49,29 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         }
     }
 
+    public void Start()
+    {
+        foreach (Player player in PhotonNetwork.PlayerList)
+        {
+            string playerName = player.NickName;
+
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Eliminated_" + playerName) && (bool)PhotonNetwork.CurrentRoom.CustomProperties["Eliminated_" + playerName])
+            {
+                PlayerDisplay targetDisplay = FindPlayerDisplay(playerName);
+                if (targetDisplay != null)
+                {
+                    ChangePlayerDisplay(targetDisplay);
+                }
+            }
+
+            // ตรวจสอบว่าผู้เล่นถูกปิดการเลือกหรือยัง
+            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Disabled_" + playerName) && (bool)PhotonNetwork.CurrentRoom.CustomProperties["Disabled_" + playerName])
+            {
+                DisablePlayerSelection(playerName);
+            }
+        }
+    }
+
     // PlayerDisplay ไหนเป็นของผู้เล่นที่ถูกเลือก
     private PlayerDisplay FindPlayerDisplay(string playerName)
     {
@@ -516,6 +539,9 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
         if (allSelectedPlayerDisplay != null)
         {
+            ChangePlayerDisplay(allSelectedPlayerDisplay);
+            DisablePlayerSelection(mostVotedPlayer);
+
             string role = allSelectedPlayerDisplay.playerRole;
             yield return new WaitForSeconds(2f);
 
@@ -651,6 +677,9 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
         if (allSelectedPlayerDisplay != null)
         {
+            ChangePlayerDisplay(allSelectedPlayerDisplay);
+            DisablePlayerSelection(mostVotedPlayer);
+
             string role = allSelectedPlayerDisplay.playerRole;
             yield return new WaitForSeconds(2f);
 
@@ -710,6 +739,17 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             if (playerDisplay.playerDisplay != null)
             {
                 playerDisplay.playerDisplay.sprite = newSprite;
+
+                // ปรับขนาดของ Image (Sprite)
+                RectTransform rectTransform = playerDisplay.playerDisplay.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    rectTransform.sizeDelta = new Vector2(480, 480);
+                }
+
+                ExitGames.Client.Photon.Hashtable properties = new ExitGames.Client.Photon.Hashtable();
+                properties["Eliminated_" + playerDisplay.playerName] = true;
+                PhotonNetwork.CurrentRoom.SetCustomProperties(properties);
             }
             else
             {
@@ -730,7 +770,10 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         if (targetDisplay != null)
         {
             targetDisplay.GetComponent<Button>().interactable = false;
+
+            ExitGames.Client.Photon.Hashtable properties = new ExitGames.Client.Photon.Hashtable();
+            properties["Disabled_" + playerName] = true;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(properties);
         }
     }
-
 }

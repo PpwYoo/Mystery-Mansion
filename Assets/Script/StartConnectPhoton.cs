@@ -4,11 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class StartConnectPhoton : MonoBehaviourPunCallbacks
 {
     public string nextSceneName = "IntroScene";
-    public Text loadingText;
+    public TMP_Text loadingText;
 
     public void OnClickStart()
     {

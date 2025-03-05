@@ -312,10 +312,10 @@ public class FindTheWaySetting : MonoBehaviour
     }
 
     void UpdateTimerUI()
-{
-    TimeSpan timeSpan = TimeSpan.FromSeconds(totalGameTime);
-    timerText.text = $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
-}
+    {
+        TimeSpan timeSpan = TimeSpan.FromSeconds(totalGameTime);
+        timerText.text = $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+    }
 
     void ChangeToWaitingScene()
     {
