@@ -16,6 +16,7 @@ public class FindTheWaySetting : MonoBehaviour
     public RectTransform playerUI; public RectTransform goalImage; public RectTransform gridPanelRectTransform;
 
     private float totalGameTime = 180f;
+    private float timeReductionMultiplier = 1f; // ผู้เล่นที่ถูกคนร้ายเลือก เวลาจะลดเร็วกว่าปกติ
     private int currentRound = 0;
     private bool isGameActive = false;
     private Vector2 currentGridPosition;
@@ -33,8 +34,25 @@ public class FindTheWaySetting : MonoBehaviour
     public GameObject resultCanvas;
     public TMP_Text resultText;
 
+    private bool isTargetedByVillain = false;
+
     void Start()
     {
+        // ผู้เล่นที่ถูกคนร้ายเลือก
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
+        {
+            string villainTarget = (string)PhotonNetwork.CurrentRoom.CustomProperties["VillainTarget"];
+            if (villainTarget == PhotonNetwork.NickName)
+            {
+                isTargetedByVillain = true;
+                timeReductionMultiplier = 1.5f;
+            }
+        }
+        else
+        {
+            Debug.Log("ไม่มีการเลือกผู้เล่นจากคนร้าย");
+        }
+
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
         
@@ -56,7 +74,7 @@ public class FindTheWaySetting : MonoBehaviour
     {
         if (isGameActive)
         {
-            totalGameTime -= Time.deltaTime;
+            totalGameTime -= Time.deltaTime * timeReductionMultiplier;
             if (totalGameTime <= 0)
             {
                 totalGameTime = 0;
@@ -68,10 +86,22 @@ public class FindTheWaySetting : MonoBehaviour
 
     void SetupButtons()
     {
-        leftButton.onClick.AddListener(() => MovePlayer(Vector2.left));
-        rightButton.onClick.AddListener(() => MovePlayer(Vector2.right));
-        upButton.onClick.AddListener(() => MovePlayer(Vector2.up));
-        downButton.onClick.AddListener(() => MovePlayer(Vector2.down));
+        if (isTargetedByVillain)
+        {
+            // การควบคุมกลับด้าน
+            leftButton.onClick.AddListener(() => MovePlayer(Vector2.right));  
+            rightButton.onClick.AddListener(() => MovePlayer(Vector2.left));
+            upButton.onClick.AddListener(() => MovePlayer(Vector2.down));
+            downButton.onClick.AddListener(() => MovePlayer(Vector2.up));
+        }
+        else
+        {
+            // การควบคุมปกติ
+            leftButton.onClick.AddListener(() => MovePlayer(Vector2.left));
+            rightButton.onClick.AddListener(() => MovePlayer(Vector2.right));
+            upButton.onClick.AddListener(() => MovePlayer(Vector2.up));
+            downButton.onClick.AddListener(() => MovePlayer(Vector2.down));
+        }
     }
 
     void MovePlayer(Vector2 direction)
@@ -134,7 +164,7 @@ public class FindTheWaySetting : MonoBehaviour
         currentRound++;
         roundText.text = $"รอบที่ {currentRound}/5";
 
-        int numberOfTraps = 5 + currentRound;
+        int numberOfTraps = isTargetedByVillain ? (10 + currentRound) : (5 + currentRound);
 
         // ตำแหน่งเส้นชัย
         Vector2 goal = new Vector2(gridSize - 1, gridSize - 1);

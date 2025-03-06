@@ -220,14 +220,6 @@ public class GameStart : MonoBehaviourPunCallbacks
             }
             Debug.Log($"ผู้เล่น {votedPlayer} ได้รับ {voteCounts[votedPlayer]} โหวต");
         }
-
-        // การกระทำของคนร้าย
-        if (targetPlayer == PhotonNetwork.LocalPlayer && changedProps.ContainsKey("VillainTarget"))
-        {
-            Debug.Log($"เป้าหมาย: {changedProps["VillainTarget"]}");
-        }
-
-        base.OnPlayerPropertiesUpdate(targetPlayer, changedProps);
     }
 
     public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
@@ -243,6 +235,13 @@ public class GameStart : MonoBehaviourPunCallbacks
         if (propertiesThatChanged.ContainsKey("EmployerActionDone") || propertiesThatChanged.ContainsKey("VillainActionDone"))
         {
             CheckIfBothActionsCompletedAndLoadScene();
+        }
+
+        // การกระทำของคนร้าย
+        if (propertiesThatChanged.ContainsKey("VillainTarget"))
+        {
+            string villainTarget = (string)PhotonNetwork.CurrentRoom.CustomProperties["VillainTarget"];
+            Debug.Log($"เป้าหมายของคนร้ายคือ: {villainTarget}");
         }
     }
     
@@ -631,7 +630,7 @@ public class GameStart : MonoBehaviourPunCallbacks
         {
             { "VillainTarget", playerName }
         };
-        PhotonNetwork.LocalPlayer.SetCustomProperties(villainAction);
+        PhotonNetwork.CurrentRoom.SetCustomProperties(villainAction);
 
         FinishVillainSelection();
     }
