@@ -53,6 +53,7 @@ public class Fingerprint : MonoBehaviour
 
     void Start()
     {
+        // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
         totalLevels = questions.Length;
         submitButton.interactable = false;
@@ -254,7 +255,7 @@ public class Fingerprint : MonoBehaviour
     IEnumerator ShowCorrectAnswerPanel()
     {
         answerCorrectPanel.SetActive(true);
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
         answerCorrectPanel.SetActive(false);
 
         currentLevel++;

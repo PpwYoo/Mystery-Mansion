@@ -28,11 +28,13 @@ public class SpotDifference : MonoBehaviour
     public Image bottomImage;
     public TMP_Text timerText;
     public TMP_Text roundText;
-    public TMP_Text messageText;
+    public TMP_Text foundText;
+
+    public GameObject successPanel;
 
     private int currentRound = 0;
     private int currentPuzzleSetIndex = 0;
-    private float totalTime;
+    private float roundTimeRemaining;
     private bool isTimerRunning = false;
     private bool isGameActive = false;
     private int differencesFound = 0;
@@ -56,10 +58,10 @@ public class SpotDifference : MonoBehaviour
         currentPuzzleSetIndex = UnityEngine.Random.Range(0, puzzleSets.Count);
         var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
 
-        totalTime = 0;
+        roundTimeRemaining = 0;
         foreach (var round in selectedPuzzleSet.rounds)
         {
-            totalTime += round.roundTimer;
+            roundTimeRemaining += round.roundTimer;
         }
 
         // ซ่อนปุ่มที่เคยเลือกไว้
@@ -77,21 +79,21 @@ public class SpotDifference : MonoBehaviour
     }
 
     void Update()
-{
-    if (isRoundActive)
     {
-        totalTime -= Time.deltaTime;
-        if (totalTime <= 0)
+        if (isRoundActive)
         {
-            totalTime = 0;
-            isTimerRunning = false;
-            EndGame(false);
-        }
+            roundTimeRemaining -= Time.deltaTime;
+            if (roundTimeRemaining <= 0)
+            {
+                roundTimeRemaining = 0;
+                isTimerRunning = false;
+                EndGame(false);
+            }
 
-        TimeSpan timeSpan = TimeSpan.FromSeconds(totalTime);
-        timerText.text = string.Format("{0:D2}:{1:D2}", timeSpan.Minutes, timeSpan.Seconds);
+            TimeSpan timeSpan = TimeSpan.FromSeconds(roundTimeRemaining);
+            timerText.text = string.Format("{0:D2}:{1:D2}", timeSpan.Minutes, timeSpan.Seconds);
+        }
     }
-}
 
     IEnumerator ShowCountdownAndStart()
     {
@@ -113,12 +115,26 @@ public class SpotDifference : MonoBehaviour
     public void StartRound(int roundIndex)
     {
         ResetPreviousRound();
-        
+
         var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
         currentRound = roundIndex;
 
         topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
         bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].bottomImage;
+
+        // ตั้งเวลาใหม่สำหรับรอบนี้
+        roundTimeRemaining = selectedPuzzleSet.rounds[roundIndex].roundTimer;
+        isTimerRunning = true;
+
+        // รีเซ็ตจำนวนที่หาเจอ
+        differencesFound = 0;
+
+        // ซ่อน Success Panel ตอนเริ่มรอบใหม่
+        successPanel.SetActive(false);
+
+        // อัปเดตข้อความ foundText สำหรับรอบใหม่
+        int totalDifferences = selectedPuzzleSet.rounds[roundIndex].differencePoints.Count;
+        foundText.text = $"(หาเจอแล้ว {differencesFound}/{totalDifferences})";
 
         // แสดงปุ่มจุดต่าง
         foreach (var point in selectedPuzzleSet.rounds[roundIndex].differencePoints)
@@ -126,9 +142,7 @@ public class SpotDifference : MonoBehaviour
             point.gameObject.SetActive(true);
         }
 
-        differencesFound = 0;
-        roundText.text = $"Round: {roundIndex + 1}/{selectedPuzzleSet.rounds.Count}";
-        messageText.text = "";
+        roundText.text = $"รอบที่: {roundIndex + 1}/{selectedPuzzleSet.rounds.Count}";
     }
 
     private void ResetPreviousRound()
@@ -155,20 +169,38 @@ public class SpotDifference : MonoBehaviour
         if (!isGameActive) return;
 
         differencesFound++;
-        Debug.Log($"Round {currentRound + 1}: Difference found ({differencesFound}/{puzzleSets[currentPuzzleSetIndex].rounds[currentRound].differencePoints.Count})");
 
-        if (differencesFound >= puzzleSets[currentPuzzleSetIndex].rounds[currentRound].differencePoints.Count)
+        // อัปเดตข้อความ foundText เมื่อเจอจุดต่าง
+        int totalDifferences = puzzleSets[currentPuzzleSetIndex].rounds[currentRound].differencePoints.Count;
+        foundText.text = $"(หาเจอแล้ว {differencesFound}/{totalDifferences})";
+
+        if (differencesFound >= totalDifferences)
         {
-            messageText.text = "Success!";
+            // แสดง Success Panel แทนข้อความ
+            successPanel.SetActive(true);
 
             var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+
+            // ถ้าหาเจอครบทุกจุด และเป็นรอบสุดท้าย (รอบที่ 5)
             if (currentRound + 1 >= selectedPuzzleSet.rounds.Count)
             {
                 isTimerRunning = false;
                 isGameActive = false;
-            }
 
-            Invoke(nameof(NextRound), 2f);
+                // แสดง resultCanvas ทันทีเมื่อจบเกม
+                resultCanvas.SetActive(true);
+                resultText.text = "MISSION COMPLETED";
+
+                // บันทึกผลลง Photon
+                SaveMissionResult(true);
+
+                Invoke("ChangeToWaitingScene", 2f);
+            }
+            else
+            {
+                // ถ้าไม่ใช่รอบสุดท้าย → เริ่มรอบถัดไปหลังจาก 2 วินาที
+                Invoke(nameof(NextRound), 1f);
+            }
         }
     }
 
@@ -187,10 +219,18 @@ public class SpotDifference : MonoBehaviour
     }
 
     void EndGame(bool isSuccess)
-    { 
-        resultCanvas.SetActive(true);  
+    {
+        resultCanvas.SetActive(true);
         resultText.text = isSuccess ? "MISSION COMPLETED" : "MISSION FAILED";
-        
+
+        // บันทึกผลลง Photon
+        SaveMissionResult(isSuccess);
+
+        Invoke("ChangeToWaitingScene", 2f);
+    }
+
+    void SaveMissionResult(bool isSuccess)
+    {
         string playerName = PhotonNetwork.NickName;
         string missionKey = "Mission_SpotDifference";
         string missionResult = isSuccess ? "Complete" : "Fail";
@@ -209,10 +249,8 @@ public class SpotDifference : MonoBehaviour
             };
             PhotonNetwork.CurrentRoom.SetCustomProperties(roomProperties);
         }
-
-        Invoke("ChangeToWaitingScene", 2f);
     }
-    
+
     void ChangeToWaitingScene()
     {
         PhotonNetwork.LoadLevel("WaitingScene");

@@ -8,6 +8,8 @@ public class GameController : MonoBehaviour
     public int totalRounds = 5; // Total rounds to be played
     public float timeLimit = 25f; // Time limit per round
     private float timer;
+    private bool canSubmitAnswer = true; // Flag to track if player can still submit answer
+
     public int currentRound = 1; // Current round (accessible from other scripts)
 
     public TextMeshProUGUI timerText; // Timer UI element
@@ -46,8 +48,11 @@ public class GameController : MonoBehaviour
     {
         if (isGameActive && currentRound <= totalRounds)
         {
-            timer -= Time.deltaTime;
-            UpdateTimerUI();
+            if (canSubmitAnswer)
+            {
+                timer -= Time.deltaTime;
+                UpdateTimerUI();
+            }
 
             if (lastUpdatedRound != currentRound)
             {
@@ -57,7 +62,8 @@ public class GameController : MonoBehaviour
 
             if (timer <= 0)
             {
-                EndGame(false);
+                timer = 0;
+                EndGame(false); // Game over if time runs out
             }
         }
     }
@@ -89,6 +95,7 @@ public class GameController : MonoBehaviour
         {
             currentRound++;
             timer = timeLimit;
+            canSubmitAnswer = true; // Allow the player to submit answers again
             UpdateTimerUI();
         }
         else
@@ -103,6 +110,7 @@ public class GameController : MonoBehaviour
 
         isGameActive = false;
         timer = 0;
+        canSubmitAnswer = false; // Stop any further answers after the game ends
         UpdateTimerUI();
 
         successOverlay.SetActive(isSuccess);
@@ -154,6 +162,7 @@ public class GameController : MonoBehaviour
 
         currentRound = 1;
         timer = timeLimit;
+        canSubmitAnswer = true; // Reset answer flag for new game
         UpdateRoundUI();
         UpdateTimerUI();
 
@@ -166,7 +175,7 @@ public class GameController : MonoBehaviour
     // ฟังก์ชันเรียกใช้เมื่อผู้เล่นตอบถูก
     public void CorrectAnswerSelected()
     {
-        if (!isGameActive) return;
+        if (!isGameActive || !canSubmitAnswer) return;
 
         if (currentRound == totalRounds)
         {

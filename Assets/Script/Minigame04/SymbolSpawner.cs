@@ -26,7 +26,7 @@ public class SymbolSpawner : MonoBehaviour
 
     [Header("Panel Overlay")]
     public GameObject greenOverlayPanel;
-    public float greenOverlayDisplayTime = 2f;
+    public float greenOverlayDisplayTime = 1f;
     public GameObject redOverlayPanel;
     public GameObject finishedPanel;
 
@@ -155,8 +155,8 @@ public class SymbolSpawner : MonoBehaviour
         // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
         timerText.text = $"{minutes:D2}:{seconds:D2}";
 
-        yield return new WaitForSeconds(1f);
-        remainingTime -= 1f;
+        yield return null; // อัปเดตทุกเฟรม
+        remainingTime -= Time.deltaTime; // ลดเวลาลงตามเวลาจริง
     }
 
     timerText.text = "00:00"; // แสดง 00:00 เมื่อหมดเวลา
@@ -215,14 +215,14 @@ public class SymbolSpawner : MonoBehaviour
         // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
         selectionTimerText.text = $"{minutes:D2}:{seconds:D2}";
 
-        yield return new WaitForSeconds(1f);
-        time -= 1f;
-
-        // หากคำตอบถูกต้องก่อนหมดเวลา
+        // เช็คว่าผู้เล่นตอบถูกหรือยัง
         if (greenOverlayPanel.activeSelf)
         {
-            yield break;
+            yield break; // หยุด Coroutine ทันทีเมื่อคำตอบถูก
         }
+
+        yield return null; // อัปเดตทุกเฟรม (แทน WaitForSeconds(1f))
+        time -= Time.deltaTime; // ลดเวลาตามเวลาจริง
     }
 
     // หากเวลาหมดและยังไม่ตอบถูก

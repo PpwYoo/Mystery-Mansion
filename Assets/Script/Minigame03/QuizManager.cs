@@ -144,7 +144,7 @@ public class QuizManager : MonoBehaviour
     {
         correctOverlayPanel.SetActive(true);
         Time.timeScale = 0f;
-        yield return new WaitForSecondsRealtime(2f);
+        yield return new WaitForSecondsRealtime(1f);
         correctOverlayPanel.SetActive(false);
         Time.timeScale = 1f;
         gameController.NextRound();
