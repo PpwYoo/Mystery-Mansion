@@ -103,6 +103,19 @@ public class QuizManager : MonoBehaviour
         questionImage.sprite = questionData.image;
         questionText.text = questionData.question;
 
+        // ตรวจสอบว่าเป็นรอบสุดท้าย และผู้เล่นถูกคนร้ายเลือก
+        if (gameController.currentRound == gameController.totalRounds && gameController.isTargetedByVillain)
+        {
+            string correctAnswer = questionData.answers[questionData.correctAnswerIndex];
+
+            // ทุกคำตอบจะผิด
+            for (int i = 0; i < questionData.answers.Length; i++)
+            {
+                questionData.answers[i] = GenerateWrongAnswer(correctAnswer, questionData.answers);
+            }
+            questionData.correctAnswerIndex = -1;
+        }
+
         for (int i = 0; i < answerButtons.Length; i++)
         {
             if (i < questionData.answers.Length)
@@ -118,6 +131,8 @@ public class QuizManager : MonoBehaviour
                 answerButtons[i].gameObject.SetActive(false);
             }
         }
+
+        // Debug.Log("Index ของคำตอบที่ถูกต้อง: " + questionData.correctAnswerIndex); // ไว้ลองเช็คคำตอบไหนถูก
     }
 
     void CheckAnswer(int index)
@@ -134,23 +149,23 @@ public class QuizManager : MonoBehaviour
     }
 
     IEnumerator HandleCorrectAnswer()
-{
-    if (gameController.currentRound == gameController.totalRounds) 
     {
-        // ถ้าเป็นคำถามสุดท้าย ให้ขึ้น SuccessPanel ทันที
-        gameController.EndGame(true);
+        if (gameController.currentRound == gameController.totalRounds) 
+        {
+            // ถ้าเป็นคำถามสุดท้าย ให้ขึ้น SuccessPanel ทันที
+            gameController.EndGame(true);
+        }
+        else
+        {
+            correctOverlayPanel.SetActive(true);
+            Time.timeScale = 0f;
+            yield return new WaitForSecondsRealtime(1f);
+            correctOverlayPanel.SetActive(false);
+            Time.timeScale = 1f;
+            gameController.NextRound();
+            StartRound();
+        }
     }
-    else
-    {
-        correctOverlayPanel.SetActive(true);
-        Time.timeScale = 0f;
-        yield return new WaitForSecondsRealtime(1f);
-        correctOverlayPanel.SetActive(false);
-        Time.timeScale = 1f;
-        gameController.NextRound();
-        StartRound();
-    }
-}
 
     IEnumerator HandleWrongAnswer()
     {
@@ -163,5 +178,18 @@ public class QuizManager : MonoBehaviour
     void ResetQuestions()
     {
         // คุณสามารถเพิ่มการรีเซตคำถามในหมวดต่างๆ ได้ที่นี่
+    }
+
+    // สร้างคำตอบที่ผิด สำหรับผู้เล่นที่ถูกคนร้ายเลือก
+    string GenerateWrongAnswer(string correctAnswer, string[] allAnswers)
+    {
+        string wrongAnswer;
+
+        do
+        {
+            wrongAnswer = allAnswers[Random.Range(0, allAnswers.Length)];
+        } while (wrongAnswer == correctAnswer);
+
+        return wrongAnswer;
     }
 }

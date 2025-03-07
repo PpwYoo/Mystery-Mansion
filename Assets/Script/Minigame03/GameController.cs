@@ -24,8 +24,24 @@ public class GameController : MonoBehaviour
     public GameObject countdownCanvas;
     public TMP_Text countdownText;
 
+    public bool isTargetedByVillain = false;
+
     void Start()
     {
+        // เช็คว่าผู้เล่นปัจจุบันถูกเลือกโดย Villain หรือไม่
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
+        {
+            string villainTarget = (string)PhotonNetwork.CurrentRoom.CustomProperties["VillainTarget"];
+            if (villainTarget == PhotonNetwork.NickName)
+            {
+                isTargetedByVillain = true;
+            }
+        }
+        else
+        {
+            Debug.Log("ไม่มีการเลือกผู้เล่นจากคนร้าย");
+        }
+
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
 
