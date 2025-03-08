@@ -43,9 +43,25 @@ public class SymbolSpawner : MonoBehaviour
     private float memorizeTime;
     private float selectionTime = 25f;
 
+    private bool isTargetedByVillain = false;
+
     // Start & Main Coroutine
     void Start()
     {
+        // ผู้เล่นที่ถูกคนร้ายเลือก
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
+        {
+            string villainTarget = (string)PhotonNetwork.CurrentRoom.CustomProperties["VillainTarget"];
+            if (villainTarget == PhotonNetwork.NickName)
+            {
+                isTargetedByVillain = true;
+            }
+        }
+        else
+        {
+            Debug.Log("ไม่มีการเลือกผู้เล่นจากคนร้าย");
+        }
+
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
 
@@ -143,24 +159,24 @@ public class SymbolSpawner : MonoBehaviour
     }
 
     IEnumerator CountdownTimer(float time)
-{
-    float remainingTime = time;
-
-    while (remainingTime > 0)
     {
-        // แปลงเวลาที่เหลือเป็นนาทีและวินาที
-        int minutes = Mathf.FloorToInt(remainingTime / 60);
-        int seconds = Mathf.FloorToInt(remainingTime % 60);
+        float remainingTime = time;
 
-        // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
-        timerText.text = $"{minutes:D2}:{seconds:D2}";
+        while (remainingTime > 0)
+        {
+            // แปลงเวลาที่เหลือเป็นนาทีและวินาที
+            int minutes = Mathf.FloorToInt(remainingTime / 60);
+            int seconds = Mathf.FloorToInt(remainingTime % 60);
 
-        yield return null; // อัปเดตทุกเฟรม
-        remainingTime -= Time.deltaTime; // ลดเวลาลงตามเวลาจริง
+            // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
+            timerText.text = $"{minutes:D2}:{seconds:D2}";
+
+            yield return null; // อัปเดตทุกเฟรม
+            remainingTime -= Time.deltaTime; // ลดเวลาลงตามเวลาจริง
+        }
+
+        timerText.text = "00:00"; // แสดง 00:00 เมื่อหมดเวลา
     }
-
-    timerText.text = "00:00"; // แสดง 00:00 เมื่อหมดเวลา
-}
 
     void ShowSelectionPanel()
     {
@@ -186,9 +202,21 @@ public class SymbolSpawner : MonoBehaviour
         }
 
         // Generate New Selection Symbols
-        List<Sprite> selectionSprites = new List<Sprite>(symbolsToRememberSprites.Select(x => allSymbols[System.Array.IndexOf(framedSymbols, x)]));
-        selectionSprites.AddRange(allSymbols.Except(selectionSprites).OrderBy(x => Random.value).Take(9 - selectionSprites.Count));
-        selectionSprites = selectionSprites.OrderBy(x => Random.value).ToList();
+        List<Sprite> selectionSprites;
+
+        // ตรวจสอบว่าเป็นรอบสุดท้าย (รอบที่ 5) และผู้เล่นถูกคนร้ายเลือกหรือไม่
+        if (round == 5 && isTargetedByVillain)
+        {
+            // ให้ตัวเลือกทั้งหมดเป็นสัญลักษณ์ผิด
+            selectionSprites = allSymbols.Except(symbolsToRememberSprites).OrderBy(x => Random.value).Take(9).ToList();
+        }
+        else
+        {
+            // ผู้เล่นทั่วไป มีสัญลักษณ์ถูกต้องรวมอยู่ด้วย
+            selectionSprites = new List<Sprite>(symbolsToRememberSprites.Select(x => allSymbols[System.Array.IndexOf(framedSymbols, x)]));
+            selectionSprites.AddRange(allSymbols.Except(selectionSprites).OrderBy(x => Random.value).Take(9 - selectionSprites.Count));
+            selectionSprites = selectionSprites.OrderBy(x => Random.value).ToList();
+        }
 
         foreach (Sprite sprite in selectionSprites)
         {
@@ -205,33 +233,33 @@ public class SymbolSpawner : MonoBehaviour
     }
 
     IEnumerator SelectionCountdown(float time)
-{
-    while (time > 0)
     {
-        // แปลงเวลาที่เหลือเป็นนาทีและวินาที
-        int minutes = Mathf.FloorToInt(time / 60);
-        int seconds = Mathf.FloorToInt(time % 60);
-
-        // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
-        selectionTimerText.text = $"{minutes:D2}:{seconds:D2}";
-
-        // เช็คว่าผู้เล่นตอบถูกหรือยัง
-        if (greenOverlayPanel.activeSelf)
+        while (time > 0)
         {
-            yield break; // หยุด Coroutine ทันทีเมื่อคำตอบถูก
+            // แปลงเวลาที่เหลือเป็นนาทีและวินาที
+            int minutes = Mathf.FloorToInt(time / 60);
+            int seconds = Mathf.FloorToInt(time % 60);
+
+            // อัปเดตข้อความของตัวจับเวลาในรูปแบบ MM:SS
+            selectionTimerText.text = $"{minutes:D2}:{seconds:D2}";
+
+            // เช็คว่าผู้เล่นตอบถูกหรือยัง
+            if (greenOverlayPanel.activeSelf)
+            {
+                yield break; // หยุด Coroutine ทันทีเมื่อคำตอบถูก
+            }
+
+            yield return null; // อัปเดตทุกเฟรม (แทน WaitForSeconds(1f))
+            time -= Time.deltaTime; // ลดเวลาตามเวลาจริง
         }
 
-        yield return null; // อัปเดตทุกเฟรม (แทน WaitForSeconds(1f))
-        time -= Time.deltaTime; // ลดเวลาตามเวลาจริง
+        // หากเวลาหมดและยังไม่ตอบถูก
+        if (time <= 0 && !greenOverlayPanel.activeSelf)
+        {
+            redOverlayPanel.SetActive(true);
+            HandleGameOver();
+        }
     }
-
-    // หากเวลาหมดและยังไม่ตอบถูก
-    if (time <= 0 && !greenOverlayPanel.activeSelf)
-    {
-        redOverlayPanel.SetActive(true);
-        HandleGameOver();
-    }
-}
 
     void HandleGameOver()
     {
@@ -316,16 +344,31 @@ public class SymbolSpawner : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        List<Sprite> newSelectionSprites = new List<Sprite>();
-        List<Sprite> nonFramedMemorySymbols = symbolsToRememberSprites
-            .Select(x => allSymbols[System.Array.IndexOf(framedSymbols, x)])
-            .ToList();
+        List<Sprite> newSelectionSprites;
 
-        newSelectionSprites.AddRange(nonFramedMemorySymbols);
-        List<Sprite> remainingNonFramedSymbols = allSymbols.Except(newSelectionSprites).ToList();
-        newSelectionSprites.AddRange(remainingNonFramedSymbols.OrderBy(x => Random.value).Take(9 - newSelectionSprites.Count));
-        newSelectionSprites = newSelectionSprites.OrderBy(x => Random.value).ToList();
+        if (round == 5 && isTargetedByVillain)
+        {
+            // ถ้าเป็นรอบสุดท้ายและถูกคนร้ายเลือก → ต้องไม่มีคำตอบที่ถูกต้อง
+            newSelectionSprites = new List<Sprite>();
 
+            // ทำการสุ่มจนกว่าจะได้เซ็ตที่ไม่มีคำตอบที่ถูกต้องเลย
+            do
+            {
+                newSelectionSprites = allSymbols.Except(symbolsToRememberSprites).OrderBy(x => Random.value).Take(9).ToList();
+            } 
+            while (newSelectionSprites.Any(sprite => symbolsToRememberSprites.Contains(sprite)));
+        }
+        else
+        {
+            // กรณีปกติ
+            newSelectionSprites = symbolsToRememberSprites.Select(x => allSymbols[System.Array.IndexOf(framedSymbols, x)]).ToList();
+
+            List<Sprite> remainingNonFramedSymbols = allSymbols.Except(newSelectionSprites).ToList();
+            newSelectionSprites.AddRange(remainingNonFramedSymbols.OrderBy(x => Random.value).Take(9 - newSelectionSprites.Count));
+            newSelectionSprites = newSelectionSprites.OrderBy(x => Random.value).ToList();
+        }
+
+        // สร้างปุ่ม UI สำหรับตัวเลือกใหม่
         foreach (Sprite sprite in newSelectionSprites)
         {
             GameObject newSymbol = Instantiate(symbolPrefab, selectionGrid);
