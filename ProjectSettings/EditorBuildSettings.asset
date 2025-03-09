@@ -10,6 +10,9 @@ EditorBuildSettings:
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 1
     path: Assets/Scenes/IntroScene.unity
+    guid: f4dfbc409ff5145229ed97009db05db4
+  - enabled: 1
+    path: Assets/Scenes/NameScene.unity
     guid: ad8ccaeb3e23d4cc895711266f592d1e
   - enabled: 1
     path: Assets/Scenes/JoinGameScene.unity
@@ -34,7 +37,7 @@ EditorBuildSettings:
     guid: 049d558c9c965415ab15688a58881187
   - enabled: 1
     path: Assets/Scenes/RightSigns.unity
-    guid: 5738b46c4a09b41cabbe26dd97620f35
+    guid: 3fc8acdd13e6c734bafef6554d6fdbcd
   - enabled: 1
     path: Assets/Scenes/FindtheWay.unity
     guid: 684c613baf6c1467e98f4b862dea1904
