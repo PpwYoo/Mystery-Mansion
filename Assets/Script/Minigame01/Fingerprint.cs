@@ -51,8 +51,24 @@ public class Fingerprint : MonoBehaviour
     private bool isGameOver = false;
     private List<QuestionData> shuffledQuestions = new List<QuestionData>();
 
+    private bool isTargetedByVillain = false;
+
     void Start()
     {
+        // ผู้เล่นที่ถูกคนร้ายเลือก
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
+        {
+            string villainTarget = (string)PhotonNetwork.CurrentRoom.CustomProperties["VillainTarget"];
+            if (villainTarget == PhotonNetwork.NickName)
+            {
+                isTargetedByVillain = true;
+            }
+        }
+        else
+        {
+            Debug.Log("ไม่มีการเลือกผู้เล่นจากคนร้าย");
+        }
+
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
         totalLevels = questions.Length;
@@ -191,6 +207,13 @@ public class Fingerprint : MonoBehaviour
     {
         if (selectedAnswerIndex == -1) return;
 
+        // คนที่ถูกคนร้ายเลือก ตอบผิดรอบสุดท้าย
+        if (isTargetedByVillain && currentLevel == 4)
+        {
+            selectedAnswerIndex = GetWrongAnswerIndex();
+        }
+
+        // กรณีปกติ
         if (selectedAnswerIndex == currentQuestion.correctAnswerIndex)
         {
             Debug.Log("Correct Answer!");
@@ -209,6 +232,17 @@ public class Fingerprint : MonoBehaviour
             Debug.Log("Wrong Answer! Try again.");
             StartCoroutine(ShowWrongAnswerMessage());
         }
+    }
+
+    // คำตอบที่ผิด
+    private int GetWrongAnswerIndex()
+    {
+        List<int> wrongAnswers = new List<int>();
+        for (int i = 0; i < currentQuestion.choices.Length; i++)
+        {
+            if (i != currentQuestion.correctAnswerIndex) wrongAnswers.Add(i);
+        }
+        return wrongAnswers[Random.Range(0, wrongAnswers.Count)];
     }
 
     private bool canSelect = true; // ควบคุมการเลือกคำตอบและกดปุ่ม

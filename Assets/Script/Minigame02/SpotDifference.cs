@@ -49,8 +49,24 @@ public class SpotDifference : MonoBehaviour
     public GameObject resultCanvas;
     public TMP_Text resultText;
 
+    private bool isTargetedByVillain = false;
+
     void Start()
     {
+        // ผู้เล่นที่ถูกคนร้ายเลือก
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
+        {
+            string villainTarget = (string)PhotonNetwork.CurrentRoom.CustomProperties["VillainTarget"];
+            if (villainTarget == PhotonNetwork.NickName)
+            {
+                isTargetedByVillain = true;
+            }
+        }
+        else
+        {
+            Debug.Log("ไม่มีการเลือกผู้เล่นจากคนร้าย");
+        }
+
         // ทำให้เปลี่ยน scene ของใครของมัน (ใครทำภารกิจเสร็จก่อนก็เปลี่ยนก่อน)
         PhotonNetwork.AutomaticallySyncScene = false;
 
@@ -119,8 +135,19 @@ public class SpotDifference : MonoBehaviour
         var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
         currentRound = roundIndex;
 
-        topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
-        bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].bottomImage;
+        if (isTargetedByVillain && roundIndex == 4)
+        {
+            // ผู้เล่นที่ถูกคนร้ายเลือก ในรอบสุดท้ายรูปจะไม่ต่างกัน
+            topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+            bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+            DisableDifferencePoints();
+        }
+        else
+        {
+            // กรณีปกติ
+            topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+            bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].bottomImage;
+        }
 
         // ตั้งเวลาใหม่สำหรับรอบนี้
         roundTimeRemaining = selectedPuzzleSet.rounds[roundIndex].roundTimer;
@@ -143,6 +170,18 @@ public class SpotDifference : MonoBehaviour
         }
 
         roundText.text = $"รอบที่: {roundIndex + 1}/{selectedPuzzleSet.rounds.Count}";
+    }
+
+    private void DisableDifferencePoints()
+    {
+        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+        foreach (var round in selectedPuzzleSet.rounds)
+        {
+            foreach (var point in round.differencePoints)
+            {
+                point.interactable = false;
+            }
+        }
     }
 
     private void ResetPreviousRound()
@@ -177,7 +216,7 @@ public class SpotDifference : MonoBehaviour
         if (differencesFound >= totalDifferences)
         {
             // แสดง Success Panel แทนข้อความ
-            successPanel.SetActive(true);
+            Invoke(nameof(ShowSuccessPanel), 1f);
 
             var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
 
@@ -202,6 +241,11 @@ public class SpotDifference : MonoBehaviour
                 Invoke(nameof(NextRound), 1f);
             }
         }
+    }
+
+    void ShowSuccessPanel()
+    {
+        successPanel.SetActive(true);
     }
 
     void NextRound()
