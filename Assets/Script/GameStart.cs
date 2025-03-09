@@ -307,11 +307,12 @@ public class GameStart : MonoBehaviourPunCallbacks
         isVotingTimeOver = true;
 
         yield return new WaitForSeconds(1);
-        messageText.text = "";
-        timerText.text = "หมดเวลา";
+        messageText.text = "หมดเวลา";
+        timerText.text = "00:00";
 
         yield return new WaitForSeconds(3);
         timerText.text = "";
+        messageText.text = "";
 
         CalculateVote();
     }
@@ -336,13 +337,10 @@ public class GameStart : MonoBehaviourPunCallbacks
             }
         }
 
-        if (captainsList.Count == 1)
+        if (captainsList.Count > 0)
         {
-            SetLeader(captainsList[0]);
-        }
-        else if (captainsList.Count > 1)
-        {
-            captainText.text = "มีผู้ได้รับเลือก 2 คน";
+            string selectedLeader = captainsList[Random.Range(0, captainsList.Count)]; // ถ้าคะแนนเท่ากัน ให้สุ่มหัวหน้า
+            SetLeader(selectedLeader);
         }
 
         voteResultsPanel.SetActive(true);

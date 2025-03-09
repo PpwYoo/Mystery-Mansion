@@ -15,7 +15,7 @@ public class StartConnectPhoton : MonoBehaviourPunCallbacks
     {
         if (loadingText != null)
         {
-            loadingText.text = "กรุณารอสักครู่...";
+            loadingText.text = "";
         }
         ConnectToPhoton();
     }
