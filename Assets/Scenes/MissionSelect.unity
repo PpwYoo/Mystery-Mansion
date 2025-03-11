@@ -2994,6 +2994,8 @@ MonoBehaviour:
   instructionScrollRect: {fileID: 824484797}
   rulePanel: {fileID: 427878456}
   rolePanel: {fileID: 629428515}
+  showPanelSound: {fileID: 8300000, guid: 48e7b99fb23d64cb490fca754a4c4a1e, type: 3}
+  closeButtonSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!4 &559080133
 Transform:
   m_ObjectHideFlags: 0
@@ -3485,6 +3487,9 @@ MonoBehaviour:
   - {fileID: 1494223132}
   - {fileID: 1641250592}
   - {fileID: 1367638664}
+  openMissionSound: {fileID: 8300000, guid: f405751f2b30b43e39e063c7a231ce3d, type: 3}
+  closeMissionSound: {fileID: 8300000, guid: 048cd0de467994073a44280c25132e31, type: 3}
+  startMissionSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
 --- !u!4 &680091954
 Transform:
   m_ObjectHideFlags: 0
@@ -5046,8 +5051,9 @@ MonoBehaviour:
   sfxImage: {fileID: 1846994103}
   sfxOnSprite: {fileID: 21300000, guid: 0ce9c6c172260436a87ade64d91d846f, type: 3}
   sfxOffSprite: {fileID: 21300000, guid: 95a2d7243f774429cae0958b447e019e, type: 3}
-  startButtonClickSound: {fileID: 8300000, guid: 607dd24d9473b4cba92158326d218423, type: 3}
-  settingsButtonClickSound: {fileID: 8300000, guid: 78ede7063c3fe4922bd509b6c2211d4b, type: 3}
+  startButtonClickSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
+  settingsButtonClickSound: {fileID: 8300000, guid: fbbc640012a5e4b9590f654274cac928, type: 3}
+  closeButtonClickSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!114 &978011643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6863,8 +6869,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 490.43, y: 1059.2}
-  m_SizeDelta: {x: 980.63, y: 2118.5}
+  m_AnchoredPosition: {x: 489.42, y: 1059.2}
+  m_SizeDelta: {x: 978.83, y: 1741.2339}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1404146698
 MonoBehaviour:

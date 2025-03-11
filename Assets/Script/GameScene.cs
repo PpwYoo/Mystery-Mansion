@@ -14,8 +14,21 @@ public class GameScene : MonoBehaviourPunCallbacks
     public Button startButton;
     private List<GameObject> currentPlayers = new List<GameObject>();
 
+    [Header("BGM & SFX")]
+    public AudioClip sceneBGM;
+    public AudioClip startGameSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+        
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+        }
+
         if (PhotonNetwork.CurrentRoom != null)
         {
             roomCodeText.text = PhotonNetwork.CurrentRoom.Name;
@@ -113,6 +126,7 @@ public class GameScene : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.IsMasterClient)
         {
+            audioManager.PlaySFX(startGameSound);
             PhotonNetwork.CurrentRoom.IsOpen = false;
             PhotonNetwork.LoadLevel("GameStart");
         }

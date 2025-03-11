@@ -26,11 +26,18 @@ public class IntroStory : MonoBehaviour
     private int currentStep = 0;
     public string playerName;
 
+    [Header("SFX Sounds")]
+    public AudioClip signNameSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
         nameInputField.gameObject.SetActive(false);
         ShowStep(currentStep);
         continueButton.onClick.AddListener(OnContinue);
+
+        audioManager = FindObjectOfType<AudioManager>();
     }
 
     void ShowStep(int step)
@@ -75,6 +82,7 @@ public class IntroStory : MonoBehaviour
         }
         else
         {
+            audioManager.PlaySFX(signNameSound);
             EndIntro();
         }
     }
@@ -82,6 +90,11 @@ public class IntroStory : MonoBehaviour
     void EndIntro()
     {
         Photon.Pun.PhotonNetwork.NickName = playerName;
-        UnityEngine.SceneManagement.SceneManager.LoadScene("JoinGameScene");
+        Invoke("LoadNextScene", 0.5f);
+    }
+
+    void LoadNextScene()
+    {
+        SceneManager.LoadScene("JoinGameScene");
     }
 }

@@ -3566,8 +3566,9 @@ MonoBehaviour:
   sfxImage: {fileID: 1406244229}
   sfxOnSprite: {fileID: 21300000, guid: 47994a7ae3ce34a7d8757098bf76060e, type: 3}
   sfxOffSprite: {fileID: 21300000, guid: 0dae40d6a73594efdb372f3a2316e5fb, type: 3}
-  startButtonClickSound: {fileID: 8300000, guid: 607dd24d9473b4cba92158326d218423, type: 3}
-  settingsButtonClickSound: {fileID: 8300000, guid: 78ede7063c3fe4922bd509b6c2211d4b, type: 3}
+  startButtonClickSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
+  settingsButtonClickSound: {fileID: 8300000, guid: fbbc640012a5e4b9590f654274cac928, type: 3}
+  closeButtonClickSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!1 &898628976
 GameObject:
   m_ObjectHideFlags: 0
@@ -3810,6 +3811,8 @@ MonoBehaviour:
   instructionScrollRect: {fileID: 1470192889}
   rulePanel: {fileID: 544322581}
   rolePanel: {fileID: 770915153}
+  showPanelSound: {fileID: 8300000, guid: 48e7b99fb23d64cb490fca754a4c4a1e, type: 3}
+  closeButtonSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!4 &955671305
 Transform:
   m_ObjectHideFlags: 0
@@ -5747,9 +5750,9 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: fe811f0b359da46bfb980d88dc1d0425, type: 3}
+  m_audioClip: {fileID: 8300000, guid: f11b1928e09234402894714a33e9c699, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.3
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -7282,5 +7285,5 @@ SceneRoots:
   - {fileID: 267642667}
   - {fileID: 352168411}
   - {fileID: 955671305}
-  - {fileID: 1355017588}
   - {fileID: 1963765492}
+  - {fileID: 1355017588}

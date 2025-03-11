@@ -23,6 +23,7 @@ public class SettingMenu : MonoBehaviour
     [Header("SFX Sounds")]
     public AudioClip startButtonClickSound;
     public AudioClip settingsButtonClickSound;
+    public AudioClip closeButtonClickSound;
 
     private AudioManager audioManager;
 
@@ -71,6 +72,7 @@ public class SettingMenu : MonoBehaviour
 
     public void CloseSettings()
     {
+        audioManager.PlaySFX(closeButtonClickSound);
         SettingPanel.SetActive(false);
     }
 

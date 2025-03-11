@@ -13,8 +13,17 @@ public class MissionSelection : MonoBehaviourPunCallbacks
     public GameObject[] missionPanels;
     private int sceneIndex;
 
+    [Header("SFX")]
+    public AudioClip openMissionSound;
+    public AudioClip closeMissionSound;
+    public AudioClip startMissionSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Leader"))
         {
             string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
@@ -65,11 +74,13 @@ public class MissionSelection : MonoBehaviourPunCallbacks
             panel.SetActive(false);
         }
         missionPanels[missionIndex].SetActive(true);
+        audioManager.PlaySFX(openMissionSound);
     }
 
     public void CloseMissionPanel(int missionIndex)
     {
         missionPanels[missionIndex].SetActive(false);
+        audioManager.PlaySFX(closeMissionSound);
     }
 
     // เริ่มภารกิจ
@@ -104,6 +115,8 @@ public class MissionSelection : MonoBehaviourPunCallbacks
         {
             Debug.Log("เฉพาะหัวหน้าภารกิจที่สามารถเริ่มภารกิจได้");
         }
+
+        audioManager.PlaySFX(startMissionSound);
     }
 
     public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)

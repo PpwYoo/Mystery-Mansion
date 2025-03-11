@@ -2435,8 +2435,9 @@ MonoBehaviour:
   sfxImage: {fileID: 810646514}
   sfxOnSprite: {fileID: 21300000, guid: 47994a7ae3ce34a7d8757098bf76060e, type: 3}
   sfxOffSprite: {fileID: 21300000, guid: 0dae40d6a73594efdb372f3a2316e5fb, type: 3}
-  startButtonClickSound: {fileID: 8300000, guid: 607dd24d9473b4cba92158326d218423, type: 3}
-  settingsButtonClickSound: {fileID: 8300000, guid: 78ede7063c3fe4922bd509b6c2211d4b, type: 3}
+  startButtonClickSound: {fileID: 8300000, guid: 48e7b99fb23d64cb490fca754a4c4a1e, type: 3}
+  settingsButtonClickSound: {fileID: 8300000, guid: fbbc640012a5e4b9590f654274cac928, type: 3}
+  closeButtonClickSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!114 &759165432
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5114,6 +5115,11 @@ MonoBehaviour:
   joinRoomButton: {fileID: 552850523}
   joinConfirmButton: {fileID: 906571055}
   backButton: {fileID: 2087315248}
+  showJoinRoomInputSound: {fileID: 8300000, guid: 87c9b86303d834351ba11b344c85c0c5, type: 3}
+  hideJoinRoomInputSound: {fileID: 8300000, guid: 048cd0de467994073a44280c25132e31, type: 3}
+  createRoomSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
+  joinRoomSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
+  fadeImage: {fileID: 0}
 --- !u!4 &1388718635
 Transform:
   m_ObjectHideFlags: 0
@@ -6044,6 +6050,8 @@ MonoBehaviour:
   instructionScrollRect: {fileID: 689531767}
   rulePanel: {fileID: 1411106546}
   rolePanel: {fileID: 226960162}
+  showPanelSound: {fileID: 8300000, guid: 48e7b99fb23d64cb490fca754a4c4a1e, type: 3}
+  closeButtonSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!4 &1648170948
 Transform:
   m_ObjectHideFlags: 0
@@ -8089,5 +8097,5 @@ SceneRoots:
   - {fileID: 1371630597}
   - {fileID: 2867832}
   - {fileID: 1388718635}
-  - {fileID: 1049768788}
   - {fileID: 1648170948}
+  - {fileID: 1049768788}

@@ -58,8 +58,22 @@ public class GameStart : MonoBehaviourPunCallbacks
     private string villainselectedPlayer;
     public bool isVillainSelectionActive = false;
 
+    [Header("SFX")]
+    public AudioClip assignRoleSound;
+    public AudioClip endCaptainSound;
+    public AudioClip messageSound;
+    public AudioClip warningSound;
+    public AudioClip announceSound;
+
+    public AudioClip confirmSound;
+    public AudioClip cancelSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         SetupPlayers();
         StartCoroutine(AssignRolesWithDelay());
 
@@ -139,6 +153,7 @@ public class GameStart : MonoBehaviourPunCallbacks
         lineShowPanel.SetActive(true);
 
         yield return new WaitForSeconds(1);
+        audioManager.PlaySFX(assignRoleSound);
         randomRoleText.text = "ณ ที่แห่งนี้";
 
         yield return new WaitForSeconds(3);
@@ -152,6 +167,8 @@ public class GameStart : MonoBehaviourPunCallbacks
     {
         List<string> rolePool = GenerateRolePool();
         Player[] players = PhotonNetwork.PlayerList;
+
+        audioManager.PlaySFX(announceSound);
 
         for (int i = 0; i < players.Length; i++)
         {
@@ -258,6 +275,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     private IEnumerator ShowMissionLeaderMessage()
     {
         yield return new WaitForSeconds(5);
+        audioManager.PlaySFX(messageSound);
         messageText.text = "ถึงเวลาเลือกหัวหน้าภารกิจแล้ว!!";
 
         yield return new WaitForSeconds(3);
@@ -306,7 +324,7 @@ public class GameStart : MonoBehaviourPunCallbacks
         timerText.text = Utility.FormatTime(0);
         isVotingTimeOver = true;
 
-        yield return new WaitForSeconds(1);
+        audioManager.PlaySFX(endCaptainSound);
         messageText.text = "หมดเวลา";
         timerText.text = "00:00";
 
@@ -344,6 +362,8 @@ public class GameStart : MonoBehaviourPunCallbacks
         }
 
         voteResultsPanel.SetActive(true);
+        audioManager.PlaySFX(announceSound);
+        
         StartCoroutine(CleanupAfterVoting());
     }
 
@@ -374,19 +394,24 @@ public class GameStart : MonoBehaviourPunCallbacks
         string localPlayerRole = (string)PhotonNetwork.LocalPlayer.CustomProperties["Role"];
         if (localPlayerRole == "ผู้ว่าจ้าง")
         {
+            audioManager.PlaySFX(messageSound);
             messageText.text = "เลือกตรวจสอบผู้เล่น 1 คน";
             PerformActionForEmployer(employerselectedPlayer);
         }
         else if (localPlayerRole == "คนร้าย")
         {
+            audioManager.PlaySFX(messageSound);
             messageText.text = "เลือกกลั่นแกล้งผู้เล่น 1 คน";
             PerformActionForVillain(villainselectedPlayer);
         }
         else
         {
             yield return new WaitForSeconds(3);
+            audioManager.PlaySFX(messageSound);
             messageText.text = "กรุณารอสักครู่...";
+
             yield return new WaitForSeconds(3);
+            audioManager.PlaySFX(messageSound);
             messageText.text = "ระวังตัวด้วย คนร้ายจ้องจะเล่นคุณ!!";
         }
     }
@@ -436,6 +461,8 @@ public class GameStart : MonoBehaviourPunCallbacks
         }
 
         selectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         confirmationText.text = "แน่ใจใช่ไหม?";
         confirmationPanel.SetActive(true);
 
@@ -449,6 +476,7 @@ public class GameStart : MonoBehaviourPunCallbacks
 
     public void ConfirmVote()
     {
+        audioManager.PlaySFX(confirmSound);
         string localPlayer = PhotonNetwork.LocalPlayer.NickName;
 
         if (votes.ContainsKey(localPlayer))
@@ -481,6 +509,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     // ปุ่มยกเลิกโหวตคนนี้
     public void CancelVote()
     {
+        audioManager.PlaySFX(cancelSound);
         CloseConfirmation();
     }
 
@@ -515,6 +544,8 @@ public class GameStart : MonoBehaviourPunCallbacks
     public void ShowEmployerConfirmation(string playerName)
     {
         employerselectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         employerConfirmationText.text = "ยืนยันการเลือกผู้เล่นนี้?";
         employerConfirmationPanel.SetActive(true);
 
@@ -530,6 +561,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     {  
         // อัปเดตสถานะของผู้ว่าจ้าง
         PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable() { { "EmployerActionDone", true } });
+        audioManager.PlaySFX(confirmSound);
 
         PlayerDisplay selectedPlayerDisplay = FindPlayerDisplay(employerselectedPlayer);
         if (selectedPlayerDisplay != null)
@@ -555,6 +587,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     public void CancelEmployerSelection()
     {
         employerConfirmationPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay employerselectedPlayerDisplay = FindPlayerDisplay(employerselectedPlayer);
         if (employerselectedPlayerDisplay != null)
@@ -587,6 +620,8 @@ public class GameStart : MonoBehaviourPunCallbacks
     public void ShowVillainConfirmation(string playerName)
     {
         villainselectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         villainConfirmationText.text = "ยืนยันการเลือกผู้เล่นนี้?";
         villainConfirmationPanel.SetActive(true);
 
@@ -600,6 +635,8 @@ public class GameStart : MonoBehaviourPunCallbacks
 
     public void ConfirmVillainSelection()
     {
+        audioManager.PlaySFX(confirmSound);
+
         if (!string.IsNullOrEmpty(villainselectedPlayer))
         {
             SetVillainTarget(villainselectedPlayer);
@@ -611,6 +648,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     public void CancelVillainSelection()
     {
         villainConfirmationPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay villainselectedPlayerDisplay = FindPlayerDisplay(villainselectedPlayer);
         if (villainselectedPlayerDisplay != null)
@@ -680,7 +718,9 @@ public class GameStart : MonoBehaviourPunCallbacks
 
     IEnumerator ShowMissionMessageAndLoadScene()
     {
+        audioManager.PlaySFX(messageSound);
         messageText.text = "ได้เวลาทำภารกิจแล้ว";
+
         yield return new WaitForSeconds(3);
         PhotonNetwork.LoadLevel("MissionSelect");
     }

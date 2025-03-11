@@ -26,6 +26,15 @@ public class AudioManager : MonoBehaviour
         sfxSource.mute = PlayerPrefs.GetInt("SFX_Mute", 0) == 1;
     }
 
+    // เปลี่ยน BGM
+    public void ChangeBGM(AudioClip newBGM)
+    {
+        if (bgmSource.clip == newBGM) return;
+
+        bgmSource.clip = newBGM;
+        bgmSource.Play();
+    }
+
     // สลับสถานะเปิด/ปิดเสียง BGM
     public void ToggleBGM()
     {

@@ -60,6 +60,17 @@ public class GameStartII : MonoBehaviourPunCallbacks
     private Dictionary<string, int> susVotes = new Dictionary<string, int>();
     private Dictionary<string, int> susVoteCounts = new Dictionary<string, int>();
 
+    [Header("SFX")]
+    public AudioClip messageSound;
+    public AudioClip warningSound;
+    public AudioClip endTimerSound;
+    public AudioClip announceSound;
+
+    public AudioClip confirmSound;
+    public AudioClip cancelSound;
+
+    private AudioManager audioManager;
+
     private void Awake()
     {
         if (Instance == null)
@@ -74,6 +85,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     IEnumerator Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         SetupPlayers();
 
         // แสดงผลภารกิจ
@@ -330,7 +343,9 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void StartDiscuss()
     {
         timeRemaining = discussTimeLimit;
+        audioManager.PlaySFX(messageSound);
         messageText.text = "สนทนากัน";
+
         StartCoroutine(UpdateTimer());
     }
 
@@ -348,6 +363,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     void EndDiscuss()
     {
+        audioManager.PlaySFX(endTimerSound);
         messageText.text = "หมดเวลาสนทนา";
         timerText.text = "";
 
@@ -363,19 +379,24 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
         if (localPlayerRole == "ผู้ว่าจ้าง")
         {
+            audioManager.PlaySFX(messageSound);
             messageText.text = "เลือกตรวจสอบผู้เล่น 1 คน";   
             PerformActionForEmployer(employerselectedPlayer);
         }
         else if (localPlayerRole == "คนร้าย")
         {
+            audioManager.PlaySFX(messageSound);
             messageText.text = "เลือกกลั่นแกล้งผู้เล่น 1 คน";
             PerformActionForVillain(villainselectedPlayer);
         }
         else
         {
             yield return new WaitForSeconds(3);
+            audioManager.PlaySFX(messageSound);
             messageText.text = "กรุณารอสักครู่...";
+            
             yield return new WaitForSeconds(3);
+            audioManager.PlaySFX(messageSound);
             messageText.text = "ระวังตัวด้วย คนร้ายจ้องจะเล่นคุณ!!";
         }
     }
@@ -455,6 +476,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void ShowEmployerConfirmation(string playerName)
     {
         employerselectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         employerConfirmationText.text = "ยืนยันการเลือกผู้เล่นนี้?";
         employerConfirmationPanel.SetActive(true);
 
@@ -469,6 +492,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void ConfirmEmployerSelection()
     {
         PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable() { { "EmployerActionDone", true } });
+        audioManager.PlaySFX(confirmSound);
 
         PlayerDisplay selectedPlayerDisplay = FindPlayerDisplay(employerselectedPlayer);
         if (selectedPlayerDisplay != null)
@@ -494,6 +518,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void CancelEmployerSelection()
     {
         employerConfirmationPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay employerselectedPlayerDisplay = FindPlayerDisplay(employerselectedPlayer);
         if (employerselectedPlayerDisplay != null)
@@ -526,6 +551,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void ShowVillainConfirmation(string playerName)
     {
         villainselectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         villainConfirmationText.text = "ยืนยันการเลือกผู้เล่นนี้?";
         villainConfirmationPanel.SetActive(true);
 
@@ -539,6 +566,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     public void ConfirmVillainSelection()
     {
+        audioManager.PlaySFX(confirmSound);
+
         if (!string.IsNullOrEmpty(villainselectedPlayer))
         {
             SetVillainTarget(villainselectedPlayer);
@@ -550,6 +579,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void CancelVillainSelection()
     {
         villainConfirmationPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay villainselectedPlayerDisplay = FindPlayerDisplay(villainselectedPlayer);
         if (villainselectedPlayerDisplay != null)
@@ -616,7 +646,9 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
     IEnumerator ShowMissionMessageAndLoadScene()
     {
+        audioManager.PlaySFX(messageSound);
         messageText.text = "ได้เวลาทำภารกิจแล้ว";
+
         yield return new WaitForSeconds(3);
         PhotonNetwork.LoadLevel("MissionSelect");
     } 
@@ -632,7 +664,9 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
         for (int i = 0; i < missionFailMessages.Length; i++)
         {
+            audioManager.PlaySFX(messageSound);
             messageText.text = missionFailMessages[i];
+
             yield return new WaitForSeconds(2f);
         }
 
@@ -656,6 +690,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
         issusSelectionActive = false;
         timerText.text = "";
 
+        audioManager.PlaySFX(endTimerSound);
         messageText.text = "หมดเวลาเลือกผู้ต้องสงสัย";
         yield return new WaitForSeconds(3f);
 
@@ -678,6 +713,8 @@ public class GameStartII : MonoBehaviourPunCallbacks
         if (!isSusTimeActive) return;
 
         susSelectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         susConfirmationText.text = playerName + " น่าสงสัย?";
         susConfirmationPanel.SetActive(true);
 
@@ -691,6 +728,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     public void ConfirmSusSelection()
     {
         if (!isSusTimeActive || string.IsNullOrEmpty(susSelectedPlayer)) return;
+        audioManager.PlaySFX(confirmSound);
 
         string localPlayerName = PhotonNetwork.LocalPlayer.NickName;
 
@@ -715,6 +753,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     {
         if (!isSusTimeActive || string.IsNullOrEmpty(susSelectedPlayer)) return;
         susConfirmationPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay susSelectedPlayerDisplay = FindPlayerDisplay(susSelectedPlayer);
         if (susSelectedPlayerDisplay != null)
@@ -741,6 +780,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     private IEnumerator ShowNoSuspectsAndStartDiscuss()
     {
         messageText.text = "";
+        audioManager.PlaySFX(announceSound);
         susText.text = "ไม่มีใครน่าสงสัย";
 
         yield return new WaitForSeconds(3f);
@@ -770,9 +810,11 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
             if (hasSuspects)
             {
+                audioManager.PlaySFX(announceSound);
                 susText.text = "มีผู้ต้องสงสัย";
                 yield return new WaitForSeconds(2f);
 
+                audioManager.PlaySFX(announceSound);
                 susText.text = "มาดูผลภารกิจ\nของผู้ต้องสงสัยกัน";
                 yield return new WaitForSeconds(2f);
 
@@ -793,13 +835,15 @@ public class GameStartII : MonoBehaviourPunCallbacks
                             }
                         }
 
+                        audioManager.PlaySFX(announceSound);
                         susText.text = "ผลภารกิจของ " + playerName + "\nคือ " + missionResult;
-                        yield return new WaitForSeconds(4f);
+                        yield return new WaitForSeconds(3f);
                     }
                 }
             }
             else
             {
+                audioManager.PlaySFX(announceSound);
                 susText.text = "ไม่มีใครน่าสงสัย";
                 yield return new WaitForSeconds(3f);  
             }

@@ -2190,8 +2190,9 @@ MonoBehaviour:
   sfxImage: {fileID: 164637591}
   sfxOnSprite: {fileID: 21300000, guid: 47994a7ae3ce34a7d8757098bf76060e, type: 3}
   sfxOffSprite: {fileID: 21300000, guid: 0dae40d6a73594efdb372f3a2316e5fb, type: 3}
-  startButtonClickSound: {fileID: 8300000, guid: 607dd24d9473b4cba92158326d218423, type: 3}
-  settingsButtonClickSound: {fileID: 8300000, guid: 78ede7063c3fe4922bd509b6c2211d4b, type: 3}
+  startButtonClickSound: {fileID: 8300000, guid: 48e7b99fb23d64cb490fca754a4c4a1e, type: 3}
+  settingsButtonClickSound: {fileID: 8300000, guid: fbbc640012a5e4b9590f654274cac928, type: 3}
+  closeButtonClickSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!114 &485643740
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4159,6 +4160,7 @@ MonoBehaviour:
     isNameInputStep: 1
     buttonText: "\u0E25\u0E07\u0E19\u0E32\u0E21"
   playerName: 
+  signNameSound: {fileID: 8300000, guid: fe68cba9c5edd4870a499ac953a0e02b, type: 3}
 --- !u!4 &1072618094
 Transform:
   m_ObjectHideFlags: 0
@@ -6458,6 +6460,8 @@ MonoBehaviour:
   instructionScrollRect: {fileID: 1208606486}
   rulePanel: {fileID: 2074863235}
   rolePanel: {fileID: 1162497116}
+  showPanelSound: {fileID: 8300000, guid: 48e7b99fb23d64cb490fca754a4c4a1e, type: 3}
+  closeButtonSound: {fileID: 8300000, guid: 65d99d63b95b54954a171fb0e35c1aff, type: 3}
 --- !u!4 &1984900624
 Transform:
   m_ObjectHideFlags: 0

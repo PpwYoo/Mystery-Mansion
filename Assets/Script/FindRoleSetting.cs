@@ -37,6 +37,19 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     private float goodTimeRemaining;
     private bool isGoodTimeActive = false;
 
+    [Header("SFX")]
+    public AudioClip messageSound;
+    public AudioClip warningSound;
+    public AudioClip endTimerSound;
+    public AudioClip announceSound;
+
+    public AudioClip confirmSound;
+    public AudioClip cancelSound;
+
+    public AudioClip eliminateSound;
+
+    private AudioManager audioManager;
+
     private void Awake()
     {
         if (Instance == null)
@@ -51,6 +64,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
     public void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         foreach (Player player in PhotonNetwork.PlayerList)
         {
             string playerName = player.NickName;
@@ -146,6 +161,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
         for (int i = 0; i < missionFailMessages.Length; i++)
         {
+            audioManager.PlaySFX(messageSound);
             GameStartII.Instance.messageText.text = missionFailMessages[i];
             yield return new WaitForSeconds(2f);
         }
@@ -171,6 +187,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     public void ShowFindEmployerConfirmation(string playerName)
     {
         villainSelectedEmployer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         villainFindEmployerText.text = "คุณมั่นใจใช่ไหม";
         villainFindEmployerPanel.SetActive(true);
 
@@ -183,6 +201,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
     public void ConfirmEmployer()
     {
+        audioManager.PlaySFX(confirmSound);
         StartCoroutine(ConfirmEmployerShowResult());
     }
 
@@ -212,6 +231,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     public void CancelEmployer()
     {
         villainFindEmployerPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay villainSelectedEmployerDisplay = FindPlayerDisplay(villainSelectedEmployer);
         if (villainSelectedEmployerDisplay != null)
@@ -250,6 +270,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         string[] employerResult = new string[] { "ในตอนนี้...", "ผู้ว่าจ้าง..", resultMessage };
         for (int i = 0; i < employerResult.Length; i++)
         {
+            audioManager.PlaySFX(announceSound);
             villainFindEmployerResult.text = employerResult[i];
             yield return new WaitForSeconds(2f);
         }
@@ -264,6 +285,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
         for (int i = 0; i < missionFailMessages.Length; i++)
         {
+            audioManager.PlaySFX(messageSound);
             GameStartII.Instance.messageText.text = missionFailMessages[i];
             yield return new WaitForSeconds(2f);
         }
@@ -289,6 +311,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     public void ShowFindEmployerFinalConfirmation(string playerName)
     {
         villainSelectedEmployer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         villainFindEmployerFinalText.text = "คุณมั่นใจใช่ไหม";
         villainFindEmployerFinalPanel.SetActive(true);
 
@@ -301,6 +325,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
     public void ConfirmFinalEmployer()
     {
+        audioManager.PlaySFX(confirmSound);
         StartCoroutine(ConfirmEmployerShowResultFinal());
     }
 
@@ -330,6 +355,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     public void CancelEmployerFinal()
     {
         villainFindEmployerFinalPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay villainSelectedEmployerDisplay = FindPlayerDisplay(villainSelectedEmployer);
         if (villainSelectedEmployerDisplay != null)
@@ -366,6 +392,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         string[] employerResult = new string[] { "ในตอนนี้...", "ผู้ว่าจ้าง..", resultMessage };
         for (int i = 0; i < employerResult.Length; i++)
         {
+            audioManager.PlaySFX(announceSound);
             villainFindEmployerResult.text = employerResult[i];
             yield return new WaitForSeconds(2f);
         }
@@ -393,6 +420,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
             for (int i = 0; i < missionSuccessMessages.Length; i++)
             {
+                audioManager.PlaySFX(messageSound);
                 GameStartII.Instance.messageText.text = missionSuccessMessages[i];
                 yield return new WaitForSeconds(2f);
             }
@@ -418,7 +446,9 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         isGoodSelectBadActive = false;
         GameStartII.Instance.timerText.text = "";
 
+        audioManager.PlaySFX(endTimerSound);
         GameStartII.Instance.messageText.text = "หมดเวลาตามหาคนร้าย";
+
         yield return new WaitForSeconds(3f);
         GameStartII.Instance.messageText.text = "";
 
@@ -441,6 +471,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         if (!isGoodTimeActive) return;
 
         allSelectedPlayer = playerName;
+
+        audioManager.PlaySFX(warningSound);
         allConfirmationText.text = playerName + " น่าสงสัย?";
         allConfirmationPanel.SetActive(true);
 
@@ -454,6 +486,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     public void ConfirmFindVillain()
     {
         if (!isGoodTimeActive || string.IsNullOrEmpty(allSelectedPlayer)) return;
+        audioManager.PlaySFX(confirmSound);
 
         string localPlayerName = PhotonNetwork.LocalPlayer.NickName;
 
@@ -478,6 +511,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     {
         if (!isGoodTimeActive || string.IsNullOrEmpty(allSelectedPlayer)) return;
         allConfirmationPanel.SetActive(false);
+        audioManager.PlaySFX(cancelSound);
 
         PlayerDisplay allSelectedPlayerDisplay = FindPlayerDisplay(allSelectedPlayer);
         if (allSelectedPlayerDisplay != null)
@@ -507,7 +541,9 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         // ถ้าไม่มีการโหวตใดๆ
         if (allVoteCounts.Count == 0)
         {
+            audioManager.PlaySFX(announceSound);
             findVillainResult.text = "ไม่มีใครถูกโหวต!";
+
             yield return new WaitForSeconds(2f);
             findVillainResult.text = "";
 
@@ -524,8 +560,10 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
         if (tiedPlayers.Count > 1)
         {
+            audioManager.PlaySFX(announceSound);
             findVillainResult.text = "ผู้เล่นมีคะแนนโหวต\nเท่ากัน";
             yield return new WaitForSeconds(2f);
+
             findVillainResult.text = "ทำให้ไม่มีผู้เล่น\nถูกตรวจสอบ!";
             yield return new WaitForSeconds(2f);
             findVillainResult.text = "";
@@ -548,6 +586,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             if (role == "นักสืบ" || role == "ผู้ว่าจ้าง")
             {
                 yield return new WaitForSeconds(2f);
+                audioManager.PlaySFX(announceSound);
+
                 string[] villainResult = currentRound == 5 
                     ? new string[] { $"ผู้เล่น {mostVotedPlayer}", "...", "ไม่ใช่คนร้าย!!", "คนร้ายยังคงเหลืออยู่..", "คุณไม่สามารถ\nหาคนร้ายได้เลย" }
                     : new string[] { $"ผู้เล่น {mostVotedPlayer}", "...", "ไม่ใช่คนร้าย!!", "เกมยังคงดำเนินต่อไป", "" };
@@ -572,6 +612,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             else if (role == "คนร้าย")
             {
                 yield return new WaitForSeconds(2f);
+                audioManager.PlaySFX(announceSound);
+
                 string[] villainResult = new string[] { $"ผู้เล่น {mostVotedPlayer}", "...", "คือคนร้าย!!", "คุณพบตัวคนร้ายแล้ว!!", "" };
 
                 foreach (string message in villainResult)
@@ -629,8 +671,10 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     {
         if (allVoteCounts.Count == 0)
         {
+            audioManager.PlaySFX(announceSound);
             findVillainResult.text = "ไม่มีใครถูกโหวต!";
             yield return new WaitForSeconds(2f);
+
             findVillainResult.text = isFinalRound ? "คนร้ายยังคงเหลืออยู่.." : "";
             yield return new WaitForSeconds(2f);
 
@@ -654,8 +698,10 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
         if (tiedPlayers.Count > 1)
         {
+            audioManager.PlaySFX(announceSound);
             findVillainResult.text = "ผู้เล่นมีคะแนนโหวต\nเท่ากัน";
             yield return new WaitForSeconds(2f);
+
             findVillainResult.text = "ทำให้ไม่มีผู้เล่น\nถูกตรวจสอบ!";
             yield return new WaitForSeconds(2f);
             findVillainResult.text = isFinalRound ? "คนร้ายยังคงเหลืออยู่.." : "";
@@ -685,6 +731,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
             if (role == "นักสืบ" || role == "ผู้ว่าจ้าง")
             {
+                audioManager.PlaySFX(announceSound);
+                
                 string[] villainResult = isFinalRound 
                     ? new string[] { $"ผู้เล่น {mostVotedPlayer}", "...", "ไม่ใช่คนร้าย!!", "คนร้ายยังคงเหลืออยู่.." }
                     : new string[] { $"ผู้เล่น {mostVotedPlayer}", "...", "ไม่ใช่คนร้าย!!", "เกมยังคงดำเนินต่อไป", "" };
@@ -709,6 +757,8 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             else if (role == "คนร้าย")
             {
                 yield return new WaitForSeconds(2f);
+                audioManager.PlaySFX(announceSound);
+
                 string[] villainResult = new string[] { $"ผู้เล่น {mostVotedPlayer}", "...", "คือคนร้าย!!", "คุณพบตัวคนร้าย\nครบแล้ว!!" };
 
                 foreach (string message in villainResult)
@@ -739,6 +789,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             if (playerDisplay.playerDisplay != null)
             {
                 playerDisplay.playerDisplay.sprite = newSprite;
+                audioManager.PlaySFX(eliminateSound);
 
                 // ปรับขนาดของ Image (Sprite)
                 RectTransform rectTransform = playerDisplay.playerDisplay.GetComponent<RectTransform>();
