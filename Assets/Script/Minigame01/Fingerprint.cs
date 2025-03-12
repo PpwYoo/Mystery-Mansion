@@ -53,8 +53,21 @@ public class Fingerprint : MonoBehaviour
 
     private bool isTargetedByVillain = false;
 
+    [Header("BGM & SFX")]
+    public AudioClip sceneBGM;
+    public AudioClip missionStartSound;
+    public AudioClip showQuestionSound;
+    public AudioClip endMissionSound;
+
+    public AudioClip correctSound;
+    public AudioClip wrongSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         // ผู้เล่นที่ถูกคนร้ายเลือก
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
         {
@@ -93,6 +106,7 @@ public class Fingerprint : MonoBehaviour
     {
         countdownPanel.SetActive(true);
         string[] countdownMessages = { "3", "2", "1", "Start!" };
+        audioManager.PlaySFX(missionStartSound);
 
         foreach (var msg in countdownMessages)
         {
@@ -103,6 +117,12 @@ public class Fingerprint : MonoBehaviour
         countdownPanel.SetActive(false);
         ShowMap();
         StartTimer();
+
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+            AudioManager.instance.SetBGMVolume(1f);
+        }
     }
 
     public void StartTimer()
@@ -159,6 +179,8 @@ public class Fingerprint : MonoBehaviour
 
     public void ShowQuestion(int questionIndex)
     {
+        audioManager.PlaySFX(showQuestionSound);
+
         if (questionIndex >= totalLevels)
         {
             MissionCompleted();
@@ -251,10 +273,12 @@ public class Fingerprint : MonoBehaviour
     {
         canSelect = false; // ปิดการเลือกคำตอบและปุ่มยืนยัน
         submitButton.interactable = false; // ปิดปุ่มยืนยัน
+
         answerWrongText.gameObject.SetActive(true);
+        audioManager.PlaySFX(wrongSound);
         answerWrongText.text = "ผิด!! เลือกใหม่อีกครั้ง";
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(2f);
 
         answerWrongText.gameObject.SetActive(false);
         canSelect = true; // เปิดให้เลือกคำตอบได้อีกครั้ง
@@ -289,6 +313,8 @@ public class Fingerprint : MonoBehaviour
     IEnumerator ShowCorrectAnswerPanel()
     {
         answerCorrectPanel.SetActive(true);
+        audioManager.PlaySFX(correctSound);
+
         yield return new WaitForSeconds(1f);
         answerCorrectPanel.SetActive(false);
 
@@ -306,6 +332,8 @@ public class Fingerprint : MonoBehaviour
 
     public void ShowGameOverPanel(bool isInQuestionCanvas)
     {
+        audioManager.PlaySFX(endMissionSound);
+
         OnGameOver?.Invoke();
         answerWrongText.gameObject.SetActive(false);
         answerCorrectPanel.SetActive(false);
@@ -339,6 +367,8 @@ public class Fingerprint : MonoBehaviour
 
     public void MissionCompleted()
     {
+        audioManager.PlaySFX(endMissionSound);
+
         OnMissionCompleted?.Invoke();
         questionCanvas.SetActive(true);
         mapCanvas.SetActive(false);

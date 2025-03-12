@@ -45,9 +45,23 @@ public class SymbolSpawner : MonoBehaviour
 
     private bool isTargetedByVillain = false;
 
+    [Header("BGM & SFX")]
+    public AudioClip sceneBGM;
+    public AudioClip missionStartSound;
+    public AudioClip tickSound;
+    public AudioClip selectSound;
+    public AudioClip endMissionSound;
+
+    public AudioClip correctSound;
+    public AudioClip wrongSound;
+
+    private AudioManager audioManager;
+
     // Start & Main Coroutine
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         // ผู้เล่นที่ถูกคนร้ายเลือก
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
         {
@@ -75,6 +89,7 @@ public class SymbolSpawner : MonoBehaviour
     {
         countdownCanvas.SetActive(true);
         string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+        audioManager.PlaySFX(missionStartSound);
 
         for (int i = 0; i < countdownMessages.Length; i++)
         {
@@ -84,6 +99,12 @@ public class SymbolSpawner : MonoBehaviour
 
         countdownCanvas.SetActive(false);
         StartCoroutine(StartGame());
+
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+            AudioManager.instance.SetBGMVolume(1f);
+        }
     }
 
     IEnumerator StartGame()
@@ -100,6 +121,7 @@ public class SymbolSpawner : MonoBehaviour
     IEnumerator StartRound()
     {
         memorizeTime = 5 + round; // Reset Memorization Time
+        audioManager.PlaySFX(tickSound);
 
         // Show Memorization Panel
         timerText.gameObject.SetActive(true);
@@ -175,6 +197,7 @@ public class SymbolSpawner : MonoBehaviour
             remainingTime -= Time.deltaTime; // ลดเวลาลงตามเวลาจริง
         }
 
+        audioManager.PlaySFX(tickSound);
         timerText.text = "00:00"; // แสดง 00:00 เมื่อหมดเวลา
     }
 
@@ -263,6 +286,7 @@ public class SymbolSpawner : MonoBehaviour
 
     void HandleGameOver()
     {
+        audioManager.PlaySFX(endMissionSound);
         redOverlayPanel.SetActive(true);
         StopAllCoroutines();
 
@@ -281,6 +305,7 @@ public class SymbolSpawner : MonoBehaviour
 
     void ShowMissionCompleted()
     {
+        audioManager.PlaySFX(endMissionSound);
         finishedPanel.SetActive(true);
         StopAllCoroutines();
     }
@@ -298,6 +323,7 @@ public class SymbolSpawner : MonoBehaviour
         }
         else
         {
+            audioManager.PlaySFX(wrongSound);
             selectionQText.text = "เลือกให้ครบก่อนกดยืนยัน!!";
         }
     }
@@ -315,6 +341,7 @@ public class SymbolSpawner : MonoBehaviour
             selectionTimerText.text = "";
 
             // แสดง GreenOverlayPanel และไปต่อรอบถัดไป
+            audioManager.PlaySFX(correctSound);
             greenOverlayPanel.SetActive(true);
             redOverlayPanel.SetActive(false);
 
@@ -332,6 +359,7 @@ public class SymbolSpawner : MonoBehaviour
         }
         else
         {
+            audioManager.PlaySFX(wrongSound);
             selectionQText.text = "เลือกผิด!! ลองอีกครั้ง";
             ShuffleAllSymbolsWithoutRevealingAnswers();
         }
@@ -384,6 +412,7 @@ public class SymbolSpawner : MonoBehaviour
     void OnSymbolSelected(GameObject symbol, Sprite sprite)
     {
         Image img = symbol.GetComponent<Image>();
+        audioManager.PlaySFX(selectSound);
 
         if (selectedSymbols.Contains(symbol))
         {

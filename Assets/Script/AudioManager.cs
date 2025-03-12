@@ -71,4 +71,13 @@ public class AudioManager : MonoBehaviour
             sfxSource.PlayOneShot(clip);
         }
     }
+
+    // ปรับ volume BGM บางฉาก
+    public void SetBGMVolume(float volume)
+    {
+        if (bgmSource != null)
+        {
+            bgmSource.volume = Mathf.Clamp(volume, 0f, 1f);
+        }
+    }
 }

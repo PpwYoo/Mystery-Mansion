@@ -26,8 +26,17 @@ public class GameController : MonoBehaviour
 
     public bool isTargetedByVillain = false;
 
+    [Header("BGM & SFX")]
+    public AudioClip sceneBGM;
+    public AudioClip missionStartSound;
+    public AudioClip endMissionSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         // เช็คว่าผู้เล่นปัจจุบันถูกเลือกโดย Villain หรือไม่
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
         {
@@ -88,6 +97,7 @@ public class GameController : MonoBehaviour
     {
         countdownCanvas.SetActive(true);
         string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+        audioManager.PlaySFX(missionStartSound);
 
         for (int i = 0; i < countdownMessages.Length; i++)
         {
@@ -101,6 +111,12 @@ public class GameController : MonoBehaviour
         
         UpdateRoundUI();
         UpdateTimerUI();
+
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+            AudioManager.instance.SetBGMVolume(1f);
+        }
     }
 
     public void NextRound()
@@ -123,6 +139,7 @@ public class GameController : MonoBehaviour
     public void EndGame(bool isSuccess)
     {
         if (!isGameActive) return;
+        audioManager.PlaySFX(endMissionSound);
 
         isGameActive = false;
         timer = 0;

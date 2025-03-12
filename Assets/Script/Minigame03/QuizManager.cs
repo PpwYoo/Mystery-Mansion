@@ -38,8 +38,16 @@ public class QuizManager : MonoBehaviour
 
     private int lastLoggedRound = -1; // ใช้เพื่อตรวจสอบว่ารอบเปลี่ยนหรือไม่
 
+    [Header("BGM & SFX")]
+    public AudioClip correctSound;
+    public AudioClip wrongSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         ResetQuestions();
         gameController = FindObjectOfType<GameController>();
         StartRound();
@@ -150,6 +158,8 @@ public class QuizManager : MonoBehaviour
 
     IEnumerator HandleCorrectAnswer()
     {
+        audioManager.PlaySFX(correctSound);
+
         if (gameController.currentRound == gameController.totalRounds) 
         {
             // ถ้าเป็นคำถามสุดท้าย ให้ขึ้น SuccessPanel ทันที
@@ -169,6 +179,8 @@ public class QuizManager : MonoBehaviour
 
     IEnumerator HandleWrongAnswer()
     {
+        audioManager.PlaySFX(wrongSound);
+
         wrongOverlayPanel.SetActive(true);
         yield return new WaitForSeconds(5f);
         wrongOverlayPanel.SetActive(false);

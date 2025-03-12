@@ -36,8 +36,21 @@ public class FindTheWaySetting : MonoBehaviour
 
     private bool isTargetedByVillain = false;
 
+    [Header("BGM & SFX")]
+    public AudioClip sceneBGM;
+    public AudioClip missionStartSound;
+    public AudioClip moveSound;
+    public AudioClip endMissionSound;
+
+    public AudioClip correctSound;
+   public AudioClip trapSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         // ผู้เล่นที่ถูกคนร้ายเลือก
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
         {
@@ -107,6 +120,7 @@ public class FindTheWaySetting : MonoBehaviour
     void MovePlayer(Vector2 direction)
     {
         if (!isGameActive) return;
+        audioManager.PlaySFX(moveSound);
         currentGridPosition += new Vector2(direction.x, -direction.y);
 
         currentGridPosition.x = Mathf.Clamp(currentGridPosition.x, 0, gridSize - 1);
@@ -117,6 +131,7 @@ public class FindTheWaySetting : MonoBehaviour
         // เหยียบโดนกับดัก
         if (IsTrap(currentGridPosition))
         {
+            audioManager.PlaySFX(trapSound);
             ResetPlayerPosition();
             return;
         }
@@ -124,6 +139,7 @@ public class FindTheWaySetting : MonoBehaviour
         // ถึงเส้นชัย
         if (IsGoal(currentGridPosition))
         {
+            audioManager.PlaySFX(correctSound);
             StartRound();
         }
     }
@@ -139,6 +155,7 @@ public class FindTheWaySetting : MonoBehaviour
     IEnumerator CountdownToStart()
     {
         string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+        audioManager.PlaySFX(missionStartSound);
 
         for (int i = 0; i < countdownMessages.Length; i++)
         {
@@ -150,6 +167,12 @@ public class FindTheWaySetting : MonoBehaviour
         moveArrowCanvas.SetActive(true);
 
         StartRound();
+
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+            AudioManager.instance.SetBGMVolume(1f);
+        }
     }
 
     void StartRound()
@@ -312,6 +335,7 @@ public class FindTheWaySetting : MonoBehaviour
     void EndGame(bool isSuccess)
     {
         isGameActive = false;
+        audioManager.PlaySFX(endMissionSound);
 
         playerUI.gameObject.SetActive(false);
         goalImage.gameObject.SetActive(false);

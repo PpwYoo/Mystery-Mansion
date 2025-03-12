@@ -6,8 +6,15 @@ using Photon.Realtime;
 
 public class WaitingScene : MonoBehaviour
 {
+    public AudioClip sceneBGM;
+
     void Start()
     {
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+        }
+
         if (PhotonNetwork.InRoom)
         {
             ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();

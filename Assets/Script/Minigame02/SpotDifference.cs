@@ -51,8 +51,20 @@ public class SpotDifference : MonoBehaviour
 
     private bool isTargetedByVillain = false;
 
+    [Header("BGM & SFX")]
+    public AudioClip sceneBGM;
+    public AudioClip missionStartSound;
+    public AudioClip findSpotSound;
+    public AudioClip endMissionSound;
+
+    public AudioClip correctSound;
+
+    private AudioManager audioManager;
+
     void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         // ผู้เล่นที่ถูกคนร้ายเลือก
         if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainTarget"))
         {
@@ -114,6 +126,7 @@ public class SpotDifference : MonoBehaviour
     IEnumerator ShowCountdownAndStart()
     {
         string[] countdownMessages = new string[] { "3", "2", "1", "Start!" };
+        audioManager.PlaySFX(missionStartSound);
 
         for (int i = 0; i < countdownMessages.Length; i++)
         {
@@ -126,6 +139,12 @@ public class SpotDifference : MonoBehaviour
         isGameActive = true;
         isTimerRunning = true;
         StartRound(0);
+
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.ChangeBGM(sceneBGM);
+            AudioManager.instance.SetBGMVolume(1f);
+        }
     }
 
     public void StartRound(int roundIndex)
@@ -207,6 +226,7 @@ public class SpotDifference : MonoBehaviour
     {
         if (!isGameActive) return;
 
+        audioManager.PlaySFX(findSpotSound);
         differencesFound++;
 
         // อัปเดตข้อความ foundText เมื่อเจอจุดต่าง
@@ -228,6 +248,7 @@ public class SpotDifference : MonoBehaviour
 
                 // แสดง resultCanvas ทันทีเมื่อจบเกม
                 resultCanvas.SetActive(true);
+                audioManager.PlaySFX(endMissionSound);
                 resultText.text = "MISSION COMPLETED";
 
                 // บันทึกผลลง Photon
@@ -251,6 +272,7 @@ public class SpotDifference : MonoBehaviour
     void NextRound()
     {
         var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+        audioManager.PlaySFX(correctSound);
 
         if (currentRound + 1 < selectedPuzzleSet.rounds.Count)
         {
@@ -265,6 +287,7 @@ public class SpotDifference : MonoBehaviour
     void EndGame(bool isSuccess)
     {
         resultCanvas.SetActive(true);
+        audioManager.PlaySFX(endMissionSound);
         resultText.text = isSuccess ? "MISSION COMPLETED" : "MISSION FAILED";
 
         // บันทึกผลลง Photon
