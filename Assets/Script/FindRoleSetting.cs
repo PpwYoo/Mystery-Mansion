@@ -248,7 +248,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         {
             GameStartII.Instance.messageText.text = "";
             yield return StartCoroutine(ShowEmployerResult("ถูกพบตัวแล้ว!!!"));
-            PhotonNetwork.LoadLevel("Ending1");
+            PhotonNetwork.LoadLevel("Ending1"); // คนร้ายเจอตัวผู้ว่าจ้าง
         }
         else
         {
@@ -372,7 +372,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         {
             GameStartII.Instance.messageText.text = "";
             yield return StartCoroutine(ShowEmployerFinalResult("ถูกพบตัวแล้ว!!!"));
-            PhotonNetwork.LoadLevel("Ending1");
+            PhotonNetwork.LoadLevel("Ending1"); // คนร้ายเจอตัวผู้ว่าจ้าง
         }
         else
         {
@@ -381,7 +381,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
             villainFindEmployerResult.text = "คนร้ายแพ้แล้วล่ะ..";
             yield return new WaitForSeconds(2f);
-            PhotonNetwork.LoadLevel("Ending1");
+            PhotonNetwork.LoadLevel("Ending2"); // คนร้ายหาผู้ว่าจ้างไม่เจอ
         }
 
         yield return null;
@@ -600,7 +600,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
                 if (currentRound == 5)
                 {
-                    PhotonNetwork.LoadLevel("Ending2");
+                    PhotonNetwork.LoadLevel("Ending4"); // หาคนร้ายไม่เจอเลย
                 }
                 else
                 {
@@ -680,7 +680,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
             if (isFinalRound)
             {
-                PhotonNetwork.LoadLevel("Ending2");
+                PhotonNetwork.LoadLevel("Ending5"); // เหลือคนร้าย 1 คน
             }
             else
             {
@@ -709,7 +709,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
             if (isFinalRound)
             {
-                PhotonNetwork.LoadLevel("Ending2");
+                PhotonNetwork.LoadLevel("Ending5"); // เหลือคนร้าย 1 คน
             }
             else
             {
@@ -745,7 +745,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
                 if (isFinalRound)
                 {
-                    PhotonNetwork.LoadLevel("Ending2");
+                    PhotonNetwork.LoadLevel("Ending5"); // เหลือคนร้าย 1 คน
                 }
                 else
                 {
@@ -767,7 +767,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
                     yield return new WaitForSeconds(2f);
                 }
 
-                PhotonNetwork.LoadLevel(isFinalRound ? "Ending1" : "Ending2");
+                PhotonNetwork.LoadLevel(isFinalRound ? "Ending3" : "Ending3"); // เจอคนร้ายครบแล้ว
                 yield break;
             }
         }
