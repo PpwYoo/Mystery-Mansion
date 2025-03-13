@@ -281,7 +281,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
     public IEnumerator ActivateVillainHuntAgain()
     {
         yield return new WaitForSeconds(2f);
-        string[] missionFailMessages = new string[] { "ตราบเท่าที่ภารกิจล้มเหลวมากเกินไป", "ถึงเวลาที่คนร้าย", "จะหาตัวผู้ว่าจ้าง", "คนร้ายหาตัวผู้ว่าจ้างได้เลย" };
+        string[] missionFailMessages = new string[] { "ภารกิจล้มเหลวมากเกินไป!!", "ถึงเวลาที่คนร้าย", "จะหาตัวผู้ว่าจ้าง", "คนร้ายหาตัวผู้ว่าจ้างได้เลย" };
 
         for (int i = 0; i < missionFailMessages.Length; i++)
         {

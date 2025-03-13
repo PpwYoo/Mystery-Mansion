@@ -276,7 +276,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     {
         yield return new WaitForSeconds(5);
         audioManager.PlaySFX(messageSound);
-        messageText.text = "ถึงเวลาเลือกหัวหน้าภารกิจแล้ว!!";
+        messageText.text = "ถึงเวลาเลือกหัวหน้าภารกิจแล้ว";
 
         yield return new WaitForSeconds(3);
         instructionPanel.SetActive(true);
@@ -304,7 +304,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     void CloseInstructions()
     {
         instructionPanel.SetActive(false);
-        messageText.text = "สนทนากันเพื่อโหวตหัวหน้าภารกิจ";
+        messageText.text = "สนทนากันเพื่อหาหัวหน้าภารกิจ";
 
         isVotingEnabled = true;
     }
@@ -332,6 +332,7 @@ public class GameStart : MonoBehaviourPunCallbacks
         timerText.text = "";
         messageText.text = "";
 
+        instructionPanel.SetActive(false);
         CalculateVote();
     }
 
@@ -361,6 +362,7 @@ public class GameStart : MonoBehaviourPunCallbacks
             SetLeader(selectedLeader);
         }
 
+        instructionPanel.SetActive(false);
         voteResultsPanel.SetActive(true);
         audioManager.PlaySFX(announceSound);
         
@@ -388,7 +390,7 @@ public class GameStart : MonoBehaviourPunCallbacks
         voteResultsPanel.SetActive(false);
 
         yield return new WaitForSeconds(3);
-        messageText.text = "ระวังตัวด้วย คนร้ายจ้องจะเล่นคุณ!!";
+        messageText.text = "ระวังตัว!! คนร้ายจ้องจะเล่นคุณ";
 
         // ตรวจสอบบทบาทของผู้เล่น
         string localPlayerRole = (string)PhotonNetwork.LocalPlayer.CustomProperties["Role"];
@@ -412,7 +414,7 @@ public class GameStart : MonoBehaviourPunCallbacks
 
             yield return new WaitForSeconds(3);
             audioManager.PlaySFX(messageSound);
-            messageText.text = "ระวังตัวด้วย คนร้ายจ้องจะเล่นคุณ!!";
+            messageText.text = "ระวังตัว!! คนร้ายจ้องจะเล่นคุณ";
         }
     }
 
@@ -449,30 +451,41 @@ public class GameStart : MonoBehaviourPunCallbacks
     }
 
     // ยืนยันการเลือกหัวหน้าไหม
-    public void ShowVoteConfirmation(string playerName)
+public void ShowVoteConfirmation(string playerName)
+{
+    string localPlayer = PhotonNetwork.LocalPlayer.NickName;
+
+    if (playerName == localPlayer)
     {
-        string localPlayer = PhotonNetwork.LocalPlayer.NickName;
-
-        if (playerName == localPlayer)
-        {
-            Debug.Log("คุณไม่สามารถโหวตตัวเองได้");
-            confirmationPanel.SetActive(false);
-            return;
-        }
-
-        selectedPlayer = playerName;
-
         audioManager.PlaySFX(warningSound);
-        confirmationText.text = "แน่ใจใช่ไหม?";
-        confirmationPanel.SetActive(true);
+        StopCoroutine(ResetMessageText()); // หยุด Coroutine เดิมถ้ามี
+        messageText.text = "คุณไม่สามารถโหวตตัวเองได้";  
+        confirmationPanel.SetActive(false);
 
-        // ลด opacity ของผู้เล่นที่ถูกเลือก
-        PlayerDisplay selectedPlayerDisplay = FindPlayerDisplay(playerName);
-        if (selectedPlayerDisplay != null)
-        {
-            selectedPlayerDisplay.SetOpacity(0.5f);
-        }
+        StartCoroutine(ResetMessageText()); // รอ 3 วินาทีแล้วกลับไปแสดงข้อความปกติ
+        return;
     }
+
+    selectedPlayer = playerName;
+
+    audioManager.PlaySFX(warningSound);
+    confirmationText.text = "แน่ใจใช่ไหม?";
+    confirmationPanel.SetActive(true);
+
+    // ลด opacity ของผู้เล่นที่ถูกเลือก
+    PlayerDisplay selectedPlayerDisplay = FindPlayerDisplay(playerName);
+    if (selectedPlayerDisplay != null)
+    {
+        selectedPlayerDisplay.SetOpacity(0.5f);
+    }
+}
+
+// ฟังก์ชันหน่วงเวลา 3 วินาทีแล้วเปลี่ยนข้อความกลับเป็นปกติ
+private IEnumerator ResetMessageText()
+{
+    yield return new WaitForSeconds(3);
+    messageText.text = "สนทนากันเพื่อหาหัวหน้าภารกิจ";
+}
 
     public void ConfirmVote()
     {

@@ -2264,7 +2264,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   totalRounds: 5
-  timeLimit: 25
+  timeLimit: 20
   currentRound: 1
   timerText: {fileID: 1036020896}
   roundText: {fileID: 851087506}

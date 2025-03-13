@@ -6,7 +6,7 @@ using Photon.Pun;
 public class GameController : MonoBehaviour
 {
     public int totalRounds = 5; // Total rounds to be played
-    public float timeLimit = 25f; // Time limit per round
+    public float timeLimit = 20f; // Time limit per round
     private float timer;
     private bool canSubmitAnswer = true; // Flag to track if player can still submit answer
 

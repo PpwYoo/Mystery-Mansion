@@ -373,7 +373,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     IEnumerator StartEmployerAndVillainActions()
     {
         yield return new WaitForSeconds(3);
-        messageText.text = "ระวังตัวด้วย คนร้ายจ้องจะเล่นคุณ!!";
+        messageText.text = "ระวังตัว!! คนร้ายจ้องจะเล่นคุณ";
 
         string localPlayerRole = (string)PhotonNetwork.LocalPlayer.CustomProperties["Role"];
 
@@ -397,7 +397,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
             
             yield return new WaitForSeconds(3);
             audioManager.PlaySFX(messageSound);
-            messageText.text = "ระวังตัวด้วย คนร้ายจ้องจะเล่นคุณ!!";
+            messageText.text = "ระวังตัว!! คนร้ายจ้องจะเล่นคุณ";
         }
     }
 

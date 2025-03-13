@@ -148,48 +148,45 @@ public class SpotDifference : MonoBehaviour
     }
 
     public void StartRound(int roundIndex)
+{
+    ResetPreviousRound();
+
+    var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+    currentRound = roundIndex;
+
+    if (isTargetedByVillain && roundIndex == 4)
     {
-        ResetPreviousRound();
-
-        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
-        currentRound = roundIndex;
-
-        if (isTargetedByVillain && roundIndex == 4)
-        {
-            // ผู้เล่นที่ถูกคนร้ายเลือก ในรอบสุดท้ายรูปจะไม่ต่างกัน
-            topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
-            bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
-            DisableDifferencePoints();
-        }
-        else
-        {
-            // กรณีปกติ
-            topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
-            bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].bottomImage;
-        }
-
-        // ตั้งเวลาใหม่สำหรับรอบนี้
-        roundTimeRemaining = selectedPuzzleSet.rounds[roundIndex].roundTimer;
-        isTimerRunning = true;
-
-        // รีเซ็ตจำนวนที่หาเจอ
-        differencesFound = 0;
-
-        // ซ่อน Success Panel ตอนเริ่มรอบใหม่
-        successPanel.SetActive(false);
-
-        // อัปเดตข้อความ foundText สำหรับรอบใหม่
-        int totalDifferences = selectedPuzzleSet.rounds[roundIndex].differencePoints.Count;
-        foundText.text = $"(หาเจอแล้ว {differencesFound}/{totalDifferences})";
-
-        // แสดงปุ่มจุดต่าง
-        foreach (var point in selectedPuzzleSet.rounds[roundIndex].differencePoints)
-        {
-            point.gameObject.SetActive(true);
-        }
-
-        roundText.text = $"รอบที่: {roundIndex + 1}/{selectedPuzzleSet.rounds.Count}";
+        topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+        bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+        DisableDifferencePoints();
     }
+    else
+    {
+        topImage.sprite = selectedPuzzleSet.rounds[roundIndex].topImage;
+        bottomImage.sprite = selectedPuzzleSet.rounds[roundIndex].bottomImage;
+    }
+
+    // ตั้งเวลาใหม่สำหรับรอบนี้
+    roundTimeRemaining = selectedPuzzleSet.rounds[roundIndex].roundTimer;
+
+    // เริ่มจับเวลาใหม่
+    isTimerRunning = true;
+
+    // รีเซ็ตจำนวนที่หาเจอ
+    differencesFound = 0;
+
+    successPanel.SetActive(false);
+
+    int totalDifferences = selectedPuzzleSet.rounds[roundIndex].differencePoints.Count;
+    foundText.text = $"(หาเจอแล้ว {differencesFound}/{totalDifferences})";
+
+    foreach (var point in selectedPuzzleSet.rounds[roundIndex].differencePoints)
+    {
+        point.gameObject.SetActive(true);
+    }
+
+    roundText.text = $"รอบที่ {roundIndex + 1}/{selectedPuzzleSet.rounds.Count}";
+}
 
     private void DisableDifferencePoints()
     {
@@ -258,7 +255,7 @@ public class SpotDifference : MonoBehaviour
             }
             else
             {
-                // ถ้าไม่ใช่รอบสุดท้าย → เริ่มรอบถัดไปหลังจาก 2 วินาที
+                // ถ้าไม่ใช่รอบสุดท้าย → เริ่มรอบถัดไปหลังจาก 1 วินาที
                 Invoke(nameof(NextRound), 1f);
             }
         }
@@ -270,19 +267,36 @@ public class SpotDifference : MonoBehaviour
     }
 
     void NextRound()
-    {
-        var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
-        audioManager.PlaySFX(correctSound);
+{
+    ShowSuccessPanel();
+    audioManager.PlaySFX(correctSound);
 
-        if (currentRound + 1 < selectedPuzzleSet.rounds.Count)
-        {
-            StartRound(currentRound + 1);
-        }
-        else
-        {
-            EndGame(true);
-        }
+    // หยุดเวลา
+    isTimerRunning = false;
+
+    var selectedPuzzleSet = puzzleSets[currentPuzzleSetIndex];
+
+    if (currentRound + 1 < selectedPuzzleSet.rounds.Count)
+    {
+        // หน่วงเวลา 1 วินาทีก่อนเริ่มรอบถัดไป
+        StartCoroutine(WaitAndStartNextRound(1f, currentRound + 1));
     }
+    else
+    {
+        EndGame(true);
+    }
+}
+
+// Coroutine สำหรับหน่วงเวลาก่อนเริ่มรอบใหม่
+IEnumerator WaitAndStartNextRound(float delay, int nextRound)
+{
+    yield return new WaitForSeconds(delay);
+
+    successPanel.SetActive(false); // ปิด Success Panel ก่อนเริ่มรอบใหม่
+
+    // เริ่มรอบใหม่
+    StartRound(nextRound);
+}
 
     void EndGame(bool isSuccess)
     {

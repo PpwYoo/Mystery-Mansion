@@ -139,7 +139,6 @@ public class QuizManager : MonoBehaviour
                 answerButtons[i].gameObject.SetActive(false);
             }
         }
-
         // Debug.Log("Index ของคำตอบที่ถูกต้อง: " + questionData.correctAnswerIndex); // ไว้ลองเช็คคำตอบไหนถูก
     }
 

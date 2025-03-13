@@ -30,19 +30,19 @@ EditorBuildSettings:
     path: Assets/Scenes/MissionSelect.unity
     guid: fb2c474bb08b74bef86e4bea9f954117
   - enabled: 1
-    path: Assets/Scenes/_Mission/Fingerprint.unity
+    path: Assets/Scenes/All_Mission/Fingerprint.unity
     guid: ea70c53b9603e4fd29957a0df56d7396
   - enabled: 1
-    path: Assets/Scenes/_Mission/SpotsHunt.unity
+    path: Assets/Scenes/All_Mission/SpotsHunt.unity
     guid: 890a619af4ade4340b8f2c96b12d0375
   - enabled: 1
-    path: Assets/Scenes/_Mission/RandomQuiz.unity
+    path: Assets/Scenes/All_Mission/RandomQuiz.unity
     guid: 049d558c9c965415ab15688a58881187
   - enabled: 1
-    path: Assets/Scenes/_Mission/RightSigns.unity
+    path: Assets/Scenes/All_Mission/RightSigns.unity
     guid: 3fc8acdd13e6c734bafef6554d6fdbcd
   - enabled: 1
-    path: Assets/Scenes/_Mission/FindtheWay.unity
+    path: Assets/Scenes/All_Mission/FindtheWay.unity
     guid: 684c613baf6c1467e98f4b862dea1904
   - enabled: 1
     path: Assets/Scenes/WaitingScene.unity

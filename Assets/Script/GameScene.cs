@@ -5,6 +5,7 @@ using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameScene : MonoBehaviourPunCallbacks
 {
@@ -12,6 +13,7 @@ public class GameScene : MonoBehaviourPunCallbacks
     public GameObject playerPrefab;
     public RectTransform[] playerPositions;
     public Button startButton;
+    public Button backButton;
     private List<GameObject> currentPlayers = new List<GameObject>();
 
     [Header("BGM & SFX")]
@@ -39,6 +41,18 @@ public class GameScene : MonoBehaviourPunCallbacks
 
         startButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
         startButton.onClick.AddListener(StartGame);
+
+        backButton.onClick.AddListener(LeaveRoom);
+    }
+
+    public void LeaveRoom()
+    {
+        PhotonNetwork.LeaveRoom();
+    }
+
+    public override void OnLeftRoom()
+    {
+        SceneManager.LoadScene("JoinGameScene");
     }
 
     void SetupPlayers()
