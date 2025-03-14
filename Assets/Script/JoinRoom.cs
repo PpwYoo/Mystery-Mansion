@@ -16,7 +16,8 @@ public class JoinRoom : MonoBehaviourPunCallbacks
     public GameObject joinConfirmButton;
     public GameObject backButton;
 
-    [Header("SFX Sounds")]
+    [Header("BGM & SFX")]
+    public AudioClip joinSceneBGM;
     public AudioClip showJoinRoomInputSound;
     public AudioClip hideJoinRoomInputSound;
     public AudioClip createRoomSound;
@@ -27,6 +28,11 @@ public class JoinRoom : MonoBehaviourPunCallbacks
     private void Start()
     {
         audioManager = FindObjectOfType<AudioManager>();
+        if (audioManager != null && joinSceneBGM != null)
+        {
+            audioManager.ChangeBGM(joinSceneBGM);  // เปลี่ยน BGM ตอนเข้าฉาก
+        }
+        
         ResetUI();
     }
 
@@ -42,7 +48,10 @@ public class JoinRoom : MonoBehaviourPunCallbacks
 
     public void ShowJoinRoomInput()
     {
-        audioManager.PlaySFX(showJoinRoomInputSound);
+        if (audioManager != null)
+        {
+            audioManager.PlaySFX(showJoinRoomInputSound);
+        }
 
         createRoomButton.SetActive(false);
         joinRoomButton.SetActive(false);
@@ -54,13 +63,20 @@ public class JoinRoom : MonoBehaviourPunCallbacks
 
     public void HideJoinRoomInput()
     {
-        audioManager.PlaySFX(hideJoinRoomInputSound);
+        if (audioManager != null)
+        {
+            audioManager.PlaySFX(hideJoinRoomInputSound);
+        }
         ResetUI();
     }
 
     public void CreateRoom()
     {
-        audioManager.PlaySFX(createRoomSound);
+        if (audioManager != null)
+        {
+            audioManager.PlaySFX(createRoomSound);
+        }
+        
         string roomName = GenerateRoomName();
 
         // ตรวจสอบว่า NickName ถูกตั้งค่าแล้วหรือไม่
@@ -110,7 +126,11 @@ public class JoinRoom : MonoBehaviourPunCallbacks
     
     public void PlayerJoinRoom()
     {
-        audioManager.PlaySFX(joinRoomSound);
+        if (audioManager != null)
+        {
+            audioManager.PlaySFX(joinRoomSound);
+        }
+
         string roomName = joinRoomInputField.text;
 
         if (!string.IsNullOrEmpty(roomName) && !string.IsNullOrEmpty(PhotonNetwork.LocalPlayer.NickName))

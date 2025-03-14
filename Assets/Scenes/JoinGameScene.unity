@@ -5115,11 +5115,11 @@ MonoBehaviour:
   joinRoomButton: {fileID: 552850523}
   joinConfirmButton: {fileID: 906571055}
   backButton: {fileID: 2087315248}
+  joinSceneBGM: {fileID: 8300000, guid: f11b1928e09234402894714a33e9c699, type: 3}
   showJoinRoomInputSound: {fileID: 8300000, guid: 87c9b86303d834351ba11b344c85c0c5, type: 3}
   hideJoinRoomInputSound: {fileID: 8300000, guid: 048cd0de467994073a44280c25132e31, type: 3}
   createRoomSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
   joinRoomSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
-  fadeImage: {fileID: 0}
 --- !u!4 &1388718635
 Transform:
   m_ObjectHideFlags: 0
