@@ -2446,7 +2446,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0016975, y: -317}
+  m_AnchoredPosition: {x: 0, y: -280}
   m_SizeDelta: {x: 344.7216, y: 58.5239}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &498626427
@@ -2496,8 +2496,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44
-  m_fontSizeBase: 44
+  m_fontSize: 50
+  m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2719,7 +2719,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -3862,7 +3862,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 370.5, y: 937}
+  m_AnchoredPosition: {x: 395, y: 865}
   m_SizeDelta: {x: 160, y: 170}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1026080280
@@ -4420,7 +4420,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.01172924, y: -674.1}
+  m_AnchoredPosition: {x: 0, y: -810}
   m_SizeDelta: {x: 632, y: 117.18}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1345548048
@@ -4470,8 +4470,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 52
-  m_fontSizeBase: 52
+  m_fontSize: 100
+  m_fontSizeBase: 100
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -5441,8 +5441,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0017242, y: -0.005249}
-  m_SizeDelta: {x: 978.84, y: 2118.4}
+  m_AnchoredPosition: {x: 0.0042534, y: 0}
+  m_SizeDelta: {x: 978.82, y: 1920}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!328 &1810392704
 VideoPlayer:
@@ -5964,10 +5964,7 @@ MonoBehaviour:
   startButton: {fileID: 242991021}
   detectiveText: {fileID: 2055103275}
   startButtonGroup: {fileID: 242991025}
-  detectiveTextGroup: {fileID: 0}
   fadeDuration: 1
-  typingSpeed: 0.1
-  nextSceneName: IntroScene
 --- !u!4 &1963765492
 Transform:
   m_ObjectHideFlags: 0
@@ -6377,7 +6374,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: -5
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

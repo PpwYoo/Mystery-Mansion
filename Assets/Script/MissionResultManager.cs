@@ -26,10 +26,10 @@ public class MissionResultManager : MonoBehaviourPunCallbacks
         if (missionKey != "Mission_Fingerprint" && missionKey != "Mission_SpotDifference" && missionKey != "Mission_RandomQuiz" && missionKey != "Mission_RightSigns" && missionKey != "Mission_FindTheWay") { return; }
 
         int totalPlayers = PhotonNetwork.PlayerList.Length;
-        int successThreshold = Mathf.CeilToInt(totalPlayers / 2f);
+        int successThreshold = Mathf.CeilToInt(totalPlayers / 2f) + 1;
         int successCount = CountSuccessfulPlayers(missionKey);
 
-        bool missionPassed = successCount >= successThreshold; // คนผ่านเกินครึ่ง = ภารกิจสำเร็จ
+        bool missionPassed = successCount >= successThreshold; // คนผ่านเกินครึ่ง +1 = ภารกิจสำเร็จ
         Debug.Log($"{missionKey} result: {(missionPassed ? "Mission Passed" : "Mission Failed")}");
 
         ExitGames.Client.Photon.Hashtable roomProperties = new ExitGames.Client.Photon.Hashtable

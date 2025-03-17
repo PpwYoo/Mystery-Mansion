@@ -64,6 +64,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     public AudioClip messageSound;
     public AudioClip warningSound;
     public AudioClip announceSound;
+    public AudioClip pageSound;
 
     public AudioClip confirmSound;
     public AudioClip cancelSound;
@@ -191,9 +192,8 @@ public class GameStart : MonoBehaviourPunCallbacks
 
         List<string> GenerateRolePool()
         {
-            // List<string> roles = new List<string> { "คนร้าย", "คนร้าย", "ผู้ว่าจ้าง" };
+            List<string> roles = new List<string> { "คนร้าย", "คนร้าย", "ผู้ว่าจ้าง" };
 
-            List<string> roles = new List<string> { "คนร้าย", "ผู้ว่าจ้าง" };
             int numDetectives = PhotonNetwork.PlayerList.Length - roles.Count;
             for (int i = 0; i < numDetectives; i++) roles.Add("นักสืบ");
 
@@ -295,6 +295,7 @@ public class GameStart : MonoBehaviourPunCallbacks
     void UpdateInstruction()
     {
         instructionImage.sprite = instructionSprites[currentIndex];
+        audioManager.PlaySFX(pageSound);
 
         backButton.gameObject.SetActive(currentIndex > 0);
         nextButton.gameObject.SetActive(currentIndex < instructionSprites.Count - 1);
@@ -303,9 +304,10 @@ public class GameStart : MonoBehaviourPunCallbacks
 
     void CloseInstructions()
     {
+        audioManager.PlaySFX(cancelSound);
         instructionPanel.SetActive(false);
-        messageText.text = "สนทนากันเพื่อหาหัวหน้าภารกิจ";
 
+        messageText.text = "สนทนากันเพื่อหาหัวหน้าภารกิจ";
         isVotingEnabled = true;
     }
 

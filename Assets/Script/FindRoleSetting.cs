@@ -795,7 +795,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
                 RectTransform rectTransform = playerDisplay.playerDisplay.GetComponent<RectTransform>();
                 if (rectTransform != null)
                 {
-                    rectTransform.sizeDelta = new Vector2(480, 480);
+                    rectTransform.sizeDelta = new Vector2(430, 430);
                 }
 
                 ExitGames.Client.Photon.Hashtable properties = new ExitGames.Client.Photon.Hashtable();
