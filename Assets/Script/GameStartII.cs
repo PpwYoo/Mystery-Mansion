@@ -142,7 +142,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
                 {
                     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHunt());
                 }
-                if ((failCount == 4 && successCount == 1) || (failCount == 5))
+                else if ((failCount == 4 && successCount == 1) || (failCount == 5))
                 {
                     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
                 }
@@ -824,7 +824,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
 
                 foreach (var vote in susVoteCounts)
                 {
-                    if (vote.Value >= 1)
+                    if (vote.Value >= 2)
                     {
                         string playerName = vote.Key;
                         string missionResultKey = $"{lastMission}_{playerName}";
