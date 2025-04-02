@@ -142,6 +142,10 @@ public class GameStartII : MonoBehaviourPunCallbacks
                 {
                     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHunt());
                 }
+                if ((failCount == 4 && successCount == 1) || (failCount == 5))
+                {
+                    yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
+                }
                 else
                 {
                     yield return StartCoroutine(MissionFail());
