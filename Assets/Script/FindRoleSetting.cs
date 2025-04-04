@@ -175,6 +175,12 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
     public void VillainFindEmployer(string playerName)
     {
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainHasGuessed") && (bool)PhotonNetwork.CurrentRoom.CustomProperties["VillainHasGuessed"] == true)
+        {
+            Debug.Log("คนร้ายคนอื่นเลือกผู้ว่าจ้างไปแล้ว ไม่แสดง UI ซ้ำ");
+            return;
+        }
+
         isVillainSelectEmployerActive = true;
         villainSelectedEmployer = playerName;
 
@@ -223,7 +229,10 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             }
         }
 
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "IsVillainSelectionCorrect", isCorrect } });
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable {
+            { "IsVillainSelectionCorrect", isCorrect },
+            { "VillainHasGuessed", true }
+        });
         yield return new WaitForSeconds(2f);
         StartCoroutine(ShowResult(isCorrect));
     }
@@ -299,6 +308,12 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
 
     public void VillainFindEmployerFinal(string playerName)
     {
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("VillainHasGuessedFinal") && (bool)PhotonNetwork.CurrentRoom.CustomProperties["VillainHasGuessedFinal"] == true)
+        {
+            Debug.Log("คนร้ายคนอื่นเลือกผู้ว่าจ้างไปแล้ว ไม่แสดง UI ซ้ำ");
+            return;
+        }
+
         isVillainSelectEmployerFinalActive = true;
         villainSelectedEmployer = playerName;
 
@@ -347,7 +362,10 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             }
         }
 
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable { { "IsVillainSelectionFinalCorrect", isCorrect } });
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new ExitGames.Client.Photon.Hashtable {
+            { "IsVillainSelectionFinalCorrect", isCorrect },
+            { "VillainHasGuessedFinal", true }
+        });
         yield return new WaitForSeconds(2f);
         StartCoroutine(ShowFinalResult(isCorrect));
     }
