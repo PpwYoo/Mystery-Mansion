@@ -664,7 +664,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
     {
         issusSelectionActive = true;
 
-        string[] missionFailMessages = new string[] { "ในเมื่อภารกิจล้มเหลว", "ในตอนนี้...", "คุณสงสัยใครอยู่ไหม", "เลือกผู้เล่นที่คุณสงสัย" };
+        string[] missionFailMessages = new string[] { "ในเมื่อภารกิจล้มเหลว", "ในตอนนี้...", "คุณสงสัยใครอยู่ไหม?", "เลือกผู้เล่นที่คุณสงสัย" };
 
         for (int i = 0; i < missionFailMessages.Length; i++)
         {
@@ -819,7 +819,7 @@ public class GameStartII : MonoBehaviourPunCallbacks
                 yield return new WaitForSeconds(2f);
 
                 audioManager.PlaySFX(announceSound);
-                susText.text = "มาดูผลภารกิจ\nของผู้ต้องสงสัยกัน";
+                susText.text = "มาดูผลภารกิจ\nผู้ต้องสงสัยกัน";
                 yield return new WaitForSeconds(2f);
 
                 foreach (var vote in susVoteCounts)

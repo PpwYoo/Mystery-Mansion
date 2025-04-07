@@ -21,6 +21,8 @@ public class IntroStory : MonoBehaviour
     public TMP_InputField nameInputField;
     public Button continueButton;
     public TextMeshProUGUI buttonLabel;
+    public TextMeshProUGUI warningText;
+
 
     public List<IntroStep> introSteps;
     private int currentStep = 0;
@@ -59,33 +61,75 @@ public class IntroStory : MonoBehaviour
         }
     }
 
+    IEnumerator ShowWarningForTime(string message, float duration)
+{
+    warningText.text = message; // แสดงข้อความ
+    yield return new WaitForSeconds(duration); // รอ 3 วินาที
+    warningText.text = ""; // ซ่อนข้อความ
+}
+
     void OnContinue()
+{
+    if (introSteps[currentStep].isNameInputStep)
     {
-        if (introSteps[currentStep].isNameInputStep)
+        string inputName = nameInputField.text.Trim();
+
+        if (string.IsNullOrEmpty(inputName))
         {
-            if (!string.IsNullOrEmpty(nameInputField.text))
-            {
-                playerName = nameInputField.text;
-                Debug.Log("Player Name: " + playerName);
-            }
-            else
-            {
-                Debug.LogWarning("Please enter a name!");
-                return;
-            }
+            StartCoroutine(ShowWarningForTime("กรุณาใส่ชื่อของคุณ!!", 3f));
+            return;
         }
 
-        currentStep++;
-        if (currentStep < introSteps.Count)
+        if (inputName.Length > 8)
         {
-            ShowStep(currentStep);
+            StartCoroutine(ShowWarningForTime("ห้ามเกิน 8 ตัวอักษร!!", 3f));
+            return;
         }
-        else
+
+        if (ContainsProfanity(inputName))
         {
-            audioManager.PlaySFX(signNameSound);
-            EndIntro();
+            StartCoroutine(ShowWarningForTime("ชื่อนี้ไม่เหมาะสม!!", 3f));
+            return;
+        }
+
+        playerName = inputName;
+    }
+
+    currentStep++;
+    if (currentStep < introSteps.Count)
+    {
+        ShowStep(currentStep);
+    }
+    else
+    {
+        audioManager.PlaySFX(signNameSound);
+        EndIntro();
+    }
+}
+
+bool ContainsProfanity(string name)
+{
+    string[] badWords = {
+        "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "cunt", "douche", "bimbo", "twat", "fag", "nigga", "slut", "whore",
+        "ass", "bastard", "piss", "douchebag", "scumbag", "cockhead", "shithead", "cocksucker", "whorebag", "skank", "dickhead", "pimp", 
+        "fucker", "numbnuts", "sucks", "butthead", "porn", "xxx", "sex", "nude", "boob", "tit", "ass", "clit", "cock", "vagina", "blowjob", 
+        "masturbate", "orgy", "cum", "penis", "naked", "pornhub", "hentai", "suck", "breast", "suicide", "hitler", "racist", "yed", "hee", "kuy", 
+        "gay", "kuay", "booba", "boobs", "fap", "sexy", "breast", "tits", "boobs", "thrust", "fuckface", "lick", "fucking", "orgasm", "fucktard", 
+        "cumshot", "pussyhole", "sucking", "pussys", "sexting", "climax", "vulva", "bimbo", "tramp", "escort", "callgirl", "hooker", "whoring", 
+        "cumbucket", "sexslave", "fap", "slutty", "wetdream", "rape", "porns", "breasts", "bigboob", "bigboobs", "hugeboob", "megaboob", "bigtit", 
+        "bigtits", "bigkuay", "bigkuy", "heeyai", "heelek", "hugetit", "hugetits", "bigbooba", "kuayyai", "kuaylek", "kuyyai", "kuylek", "hitlers"
+    };
+
+    string loweredName = name.ToLower();
+    foreach (string word in badWords)
+    {
+        if (loweredName.Contains(word))
+        {
+            return true;
         }
     }
+    return false;
+}
 
     void EndIntro()
     {

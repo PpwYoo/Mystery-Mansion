@@ -446,7 +446,7 @@ public class GameStart : MonoBehaviourPunCallbacks
         
         if (isVotingTimeOver)
         {
-            Debug.Log("ไม่สามารถโหวตได้ เพราะหมดเวลาแล้ว");
+            Debug.Log("ไม่สามารถโหวตได้เพราะหมดเวลาแล้ว");
             return;
         }
         ShowVoteConfirmation(playerName);

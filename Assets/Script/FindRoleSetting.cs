@@ -122,7 +122,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             bool isVillainFound = (bool)propertiesThatChanged["FirstVillainFound"];
             if (isVillainFound)
             {
-                Debug.Log("คนร้ายคนแรกถูกพบแล้ว!");
+                Debug.Log("คนร้ายคนแรกถูกพบแล้ว!!");
             }
             else
             {
@@ -195,7 +195,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         villainSelectedEmployer = playerName;
 
         audioManager.PlaySFX(warningSound);
-        villainFindEmployerText.text = "คุณมั่นใจใช่ไหม";
+        villainFindEmployerText.text = "คุณมั่นใจใช่ไหม?";
         villainFindEmployerPanel.SetActive(true);
 
         PlayerDisplay villainSelectedEmployerDisplay = FindPlayerDisplay(playerName);
@@ -328,7 +328,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         villainSelectedEmployer = playerName;
 
         audioManager.PlaySFX(warningSound);
-        villainFindEmployerFinalText.text = "คุณมั่นใจใช่ไหม";
+        villainFindEmployerFinalText.text = "คุณมั่นใจใช่ไหม?";
         villainFindEmployerFinalPanel.SetActive(true);
 
         PlayerDisplay villainSelectedEmployerDisplay = FindPlayerDisplay(playerName);
@@ -560,7 +560,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         if (allVoteCounts.Count == 0)
         {
             audioManager.PlaySFX(announceSound);
-            findVillainResult.text = "ไม่มีใครถูกโหวต!";
+            findVillainResult.text = "ไม่มีใครถูกโหวต!!";
 
             yield return new WaitForSeconds(2f);
             findVillainResult.text = "";
@@ -582,7 +582,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             findVillainResult.text = "ผู้เล่นมีคะแนนโหวต\nเท่ากัน";
             yield return new WaitForSeconds(2f);
 
-            findVillainResult.text = "ทำให้ไม่มีผู้เล่น\nถูกตรวจสอบ!";
+            findVillainResult.text = "ทำให้ไม่มีผู้เล่น\nถูกตรวจสอบ";
             yield return new WaitForSeconds(2f);
             findVillainResult.text = "";
 
@@ -647,7 +647,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
                 if (currentRound == 5)
                 {
                     yield return new WaitForSeconds(2f);
-                    findVillainResult.text = "คุณมีโอกาส\nโหวตอีกครั้ง!";
+                    findVillainResult.text = "คุณมีโอกาส\nโหวตอีกครั้ง!!";
                     yield return new WaitForSeconds(2f);
 
                     StartCoroutine(ActivateDetectiveHunt(true));
@@ -690,7 +690,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
         if (allVoteCounts.Count == 0)
         {
             audioManager.PlaySFX(announceSound);
-            findVillainResult.text = "ไม่มีใครถูกโหวต!";
+            findVillainResult.text = "ไม่มีใครถูกโหวต!!";
             yield return new WaitForSeconds(2f);
 
             findVillainResult.text = isFinalRound ? "คนร้ายยังคงเหลืออยู่.." : "";
@@ -720,7 +720,7 @@ public class FindRoleSetting : MonoBehaviourPunCallbacks
             findVillainResult.text = "ผู้เล่นมีคะแนนโหวต\nเท่ากัน";
             yield return new WaitForSeconds(2f);
 
-            findVillainResult.text = "ทำให้ไม่มีผู้เล่น\nถูกตรวจสอบ!";
+            findVillainResult.text = "ทำให้ไม่มีผู้เล่น\nถูกตรวจสอบ";
             yield return new WaitForSeconds(2f);
             findVillainResult.text = isFinalRound ? "คนร้ายยังคงเหลืออยู่.." : "";
             yield return new WaitForSeconds(2f);
