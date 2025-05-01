@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 public class GameScene : MonoBehaviourPunCallbacks
 {
     public TMP_Text roomCodeText;
+    public TMP_Text statusText; // ✅ เพิ่ม text สำหรับสถานะ
     public GameObject playerPrefab;
     public RectTransform[] playerPositions;
     public Button startButton;
@@ -25,7 +26,7 @@ public class GameScene : MonoBehaviourPunCallbacks
     void Start()
     {
         audioManager = FindObjectOfType<AudioManager>();
-        
+
         if (AudioManager.instance != null)
         {
             AudioManager.instance.ChangeBGM(sceneBGM);
@@ -35,14 +36,27 @@ public class GameScene : MonoBehaviourPunCallbacks
         {
             roomCodeText.text = PhotonNetwork.CurrentRoom.Name;
         }
-        
+
         SetupPlayers();
         PhotonNetwork.AutomaticallySyncScene = true;
 
         startButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
         startButton.onClick.AddListener(StartGame);
-
         backButton.onClick.AddListener(LeaveRoom);
+
+        UpdateStatusText(); // ✅ เรียกใช้
+    }
+
+    void UpdateStatusText()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            statusText.text = "ถ้าพร้อมแล้วกดเริ่มเกมได้เลย";
+        }
+        else
+        {
+            statusText.text = "กรุณารอสักครู่...";
+        }
     }
 
     public void LeaveRoom()
@@ -66,11 +80,11 @@ public class GameScene : MonoBehaviourPunCallbacks
         {
             int positionIndex = players[i].IsLocal ? 0 : -1;
 
-            if (!players[i].IsLocal) // หาตำแหน่งว่างสำหรับผู้เล่นที่ไม่ใช่ LocalPlayer
+            if (!players[i].IsLocal)
             {
                 for (int j = 1; j < playerPositions.Length; j++)
                 {
-                    if (!usedPositions.Contains(j)) // ถ้าตำแหน่งยังไม่ได้ใช้
+                    if (!usedPositions.Contains(j))
                     {
                         positionIndex = j;
                         break;
@@ -78,11 +92,10 @@ public class GameScene : MonoBehaviourPunCallbacks
                 }
             }
 
-            if (positionIndex != -1) // ตรวจสอบว่าพบตำแหน่งว่างหรือไม่
+            if (positionIndex != -1)
             {
                 GameObject playerObject = Instantiate(playerPrefab);
                 playerObject.transform.SetParent(playerPositions[positionIndex], false);
-
                 currentPlayers.Add(playerObject);
 
                 RectTransform rectTransform = playerObject.GetComponent<RectTransform>();
@@ -104,7 +117,7 @@ public class GameScene : MonoBehaviourPunCallbacks
 
     void ClearExistingPlayers()
     {
-        foreach (GameObject player in currentPlayers) // ลบ GameObjects ของผู้เล่นที่ถูกสร้างไปแล้ว
+        foreach (GameObject player in currentPlayers)
         {
             if (player != null)
             {
@@ -118,12 +131,14 @@ public class GameScene : MonoBehaviourPunCallbacks
     {
         SetupPlayers();
         startButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
+        UpdateStatusText(); // ✅
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         SetupPlayers();
         startButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
+        UpdateStatusText(); // ✅
     }
 
     public override void OnJoinedRoom()
@@ -134,6 +149,7 @@ public class GameScene : MonoBehaviourPunCallbacks
         }
         SetupPlayers();
         startButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
+        UpdateStatusText(); // ✅
     }
 
     public void StartGame()
@@ -146,4 +162,3 @@ public class GameScene : MonoBehaviourPunCallbacks
         }
     }
 }
-

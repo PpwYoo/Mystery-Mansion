@@ -11,6 +11,7 @@ public class MissionSelection : MonoBehaviourPunCallbacks
     public Button[] missionButtons;
     public Button[] startMissionButtons;
     public GameObject[] missionPanels;
+    public TextMeshProUGUI roleStatusText;
     private int sceneIndex;
 
     [Header("SFX")]
@@ -21,50 +22,58 @@ public class MissionSelection : MonoBehaviourPunCallbacks
     private AudioManager audioManager;
 
     void Start()
+{
+    audioManager = FindObjectOfType<AudioManager>();
+
+    if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Leader"))
     {
-        audioManager = FindObjectOfType<AudioManager>();
+        string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
 
-        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("Leader"))
+        // ทุกคนสามารถเลือกภารกิจเพื่อดูรายละเอียดได้
+        foreach (Button button in missionButtons)
         {
-            string leader = (string)PhotonNetwork.CurrentRoom.CustomProperties["Leader"];
+            button.interactable = true; 
+        }
 
-            // ทุกคนสามารถเลือกภารกิจเพื่อดูรายละเอียดได้
-            foreach (Button button in missionButtons)
+        // ปิดปุ่มภารกิจที่เคยเล่นไปแล้ว
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("PlayedMissions"))
+        {
+            int[] playedMissions = (int[])PhotonNetwork.CurrentRoom.CustomProperties["PlayedMissions"];
+            foreach (int index in playedMissions)
             {
-                button.interactable = true; 
+                missionButtons[index].interactable = false;
+            }
+        }
+
+        if (PhotonNetwork.LocalPlayer.NickName == leader)
+        {
+            // หัวหน้าทีม: เปิดปุ่มเริ่มภารกิจ
+            foreach (Button startButton in startMissionButtons)
+            {
+                startButton.interactable = true;
             }
 
-            // ปิดปุ่มภารกิจที่เคยเล่นไปแล้ว
-            if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("PlayedMissions"))
-            {
-                int[] playedMissions = (int[])PhotonNetwork.CurrentRoom.CustomProperties["PlayedMissions"];
-                foreach (int index in playedMissions)
-                {
-                    missionButtons[index].interactable = false;
-                }
-            }
-
-            // เฉพาะหัวหน้าภารกิจที่สามารถเลือกภารกิจได้
-            if (PhotonNetwork.LocalPlayer.NickName == leader)
-            {
-                foreach (Button startButton in startMissionButtons)
-                {
-                    startButton.interactable = true;
-                }
-            }
-            else
-            {
-                foreach (Button startButton in startMissionButtons)
-                {
-                    startButton.interactable = false;
-                }
-            }
+            // แสดงข้อความสำหรับหัวหน้า
+            roleStatusText.text = "เลือกภารกิจที่อยากเล่นได้เลย";
         }
         else
         {
-            Debug.Log("ไม่มีหัวหน้าภารกิจในห้องนี้");
+            // สมาชิกคนอื่น: ปิดปุ่มเริ่มภารกิจ
+            foreach (Button startButton in startMissionButtons)
+            {
+                startButton.interactable = false;
+            }
+
+            // แสดงข้อความสำหรับผู้เล่นทั่วไป
+            roleStatusText.text = "กรุณารอสักครู่...";
         }
     }
+    else
+    {
+        Debug.Log("ไม่มีหัวหน้าภารกิจในห้องนี้");
+        roleStatusText.text = "รอหัวหน้าภารกิจ...";
+    }
+}
 
     // เลือกภารกิจ
     public void ShowMissionDetails(int missionIndex)

@@ -338,52 +338,85 @@ public class GameStart : MonoBehaviourPunCallbacks
         CalculateVote();
     }
 
-    // คำนวนผลโหวตหัวหน้า
     void CalculateVote()
+{
+    int highestVote = 0;
+    List<string> captainsList = new List<string>();
+
+    foreach (var vote in voteCounts)
     {
-        int highestVote = 0;
-        List<string> captainsList = new List<string>();
-
-        foreach (var vote in voteCounts)
+        if (vote.Value > highestVote)
         {
-            if (vote.Value > highestVote)
-            {
-                highestVote = vote.Value;
-                captainsList.Clear();
-                captainsList.Add(vote.Key);
-            }
-            else if (vote.Value == highestVote)
-            {
-                captainsList.Add(vote.Key);
-            }
+            highestVote = vote.Value;
+            captainsList.Clear();
+            captainsList.Add(vote.Key);
         }
-
-        if (captainsList.Count > 0)
+        else if (vote.Value == highestVote)
         {
-            string selectedLeader = captainsList[Random.Range(0, captainsList.Count)]; // ถ้าคะแนนเท่ากัน ให้สุ่มหัวหน้า
-            SetLeader(selectedLeader);
+            captainsList.Add(vote.Key);
         }
-
-        instructionPanel.SetActive(false);
-        voteResultsPanel.SetActive(true);
-        audioManager.PlaySFX(announceSound);
-        
-        StartCoroutine(CleanupAfterVoting());
     }
+
+    string selectedLeader = "";
+
+    // ✅ กรณีไม่มีโหวตเลย
+    if (captainsList.Count == 0)
+    {
+        Player[] allPlayers = PhotonNetwork.PlayerList;
+        List<string> candidateNames = new List<string>();
+
+        // เพิ่มทุกคนในเกม (รวมตัวเอง)
+        foreach (var player in allPlayers)
+        {
+            candidateNames.Add(player.NickName);
+        }
+
+        if (candidateNames.Count > 0)
+        {
+            // สุ่มเลือกหัวหน้าภารกิจจากผู้เล่นทุกคน
+            selectedLeader = candidateNames[Random.Range(0, candidateNames.Count)];
+            Debug.Log($"ไม่มีใครโหวตเลย สุ่มหัวหน้าเป็น: {selectedLeader}");
+        }
+    }
+    else
+    {
+        // เลือกหัวหน้าจากผู้ที่มีคะแนนโหวตสูงสุด
+        selectedLeader = captainsList[Random.Range(0, captainsList.Count)];
+    }
+
+    if (!string.IsNullOrEmpty(selectedLeader))
+    {
+        // เรียก SetLeader หลังจากเลือกหัวหน้า
+        SetLeader(selectedLeader);
+    }
+
+    instructionPanel.SetActive(false);
+    voteResultsPanel.SetActive(true);
+    audioManager.PlaySFX(announceSound);
+
+    StartCoroutine(CleanupAfterVoting());
+}
 
     // ติดป้ายให้หัวหน้า
-    void SetLeader(string leader)
-    {
-        ExitGames.Client.Photon.Hashtable properties = new ExitGames.Client.Photon.Hashtable { { "Leader", leader } };
-        PhotonNetwork.CurrentRoom.SetCustomProperties(properties);
-        captainText.text = leader;
+void SetLeader(string leader)
+{
+    // กำหนดหัวหน้าภารกิจในห้อง
+    ExitGames.Client.Photon.Hashtable properties = new ExitGames.Client.Photon.Hashtable { { "Leader", leader } };
+    PhotonNetwork.CurrentRoom.SetCustomProperties(properties);
+    
+    captainText.text = leader; // แสดงชื่อหัวหน้าใน UI
 
-        foreach (GameObject playerObject in currentPlayers)
+    // อัปเดตการแสดงตราหัวหน้าภารกิจใน UI
+    foreach (GameObject playerObject in currentPlayers)
+    {
+        PlayerDisplay playerDisplay = playerObject.GetComponent<PlayerDisplay>();
+        if (playerDisplay != null)
         {
-            PlayerDisplay playerDisplay = playerObject.GetComponent<PlayerDisplay>();
-            playerDisplay?.ShowLeaderIcon(playerDisplay.playerName == leader);
+            // หากผู้เล่นเป็นหัวหน้าให้แสดงตราหัวหน้าภารกิจ
+            playerDisplay.ShowLeaderIcon(playerDisplay.playerName == leader);
         }
     }
+}
 
     // หลังจากเลือกหัวหน้าเสร็จ
     IEnumerator CleanupAfterVoting()

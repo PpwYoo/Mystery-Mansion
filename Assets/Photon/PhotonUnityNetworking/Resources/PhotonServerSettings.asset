@@ -43,6 +43,10 @@ MonoBehaviour:
   - VillainActionComplete
   - ChangeToWaitingScene
   - ShowEmployerResult
+  - ReceiveChatMessage
+  - ReceiveMessage
+  - ClearChat
+  - ClearAllMessagesRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

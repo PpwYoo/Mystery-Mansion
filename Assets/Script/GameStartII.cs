@@ -138,13 +138,13 @@ public class GameStartII : MonoBehaviourPunCallbacks
                     }
                 }
 
-                if (failCount == 3)
-                {
-                    yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHunt());
-                }
-                else if ((failCount == 4 && successCount == 1) || (failCount == 5))
+                if ((failCount == 3 && successCount == 2) || (failCount == 4 && successCount == 1) || (failCount == 5))
                 {
                     yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHuntAgain());
+                }
+                else if (failCount == 3)
+                {
+                    yield return StartCoroutine(FindRoleSetting.Instance.ActivateVillainHunt());
                 }
                 else
                 {

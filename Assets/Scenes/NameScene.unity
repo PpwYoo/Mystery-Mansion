@@ -552,8 +552,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3f36c850c2c884f2195d35c688f46611, type: 2}
+  m_sharedMaterial: {fileID: -7299357942097702749, guid: 3f36c850c2c884f2195d35c688f46611, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4056,7 +4056,7 @@ GameObject:
   - component: {fileID: 1072618094}
   - component: {fileID: 1072618093}
   m_Layer: 0
-  m_Name: IntroStory
+  m_Name: NameEdit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

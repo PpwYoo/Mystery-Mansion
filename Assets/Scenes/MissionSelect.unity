@@ -3563,6 +3563,7 @@ MonoBehaviour:
   - {fileID: 1494223132}
   - {fileID: 1641250592}
   - {fileID: 1367638664}
+  roleStatusText: {fileID: 1308019115}
   openMissionSound: {fileID: 8300000, guid: f405751f2b30b43e39e063c7a231ce3d, type: 3}
   closeMissionSound: {fileID: 8300000, guid: 048cd0de467994073a44280c25132e31, type: 3}
   startMissionSound: {fileID: 8300000, guid: 0179b8ab671004ea0a94a7039474c15c, type: 3}
@@ -6067,7 +6068,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0E01\u0E23\u0E38\u0E13\u0E32\u0E23\u0E2D\u0E2A\u0E31\u0E01\u0E04\u0E23\u0E39\u0E48"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3f36c850c2c884f2195d35c688f46611, type: 2}
   m_sharedMaterial: {fileID: -7299357942097702749, guid: 3f36c850c2c884f2195d35c688f46611, type: 2}
