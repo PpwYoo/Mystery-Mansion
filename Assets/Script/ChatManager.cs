@@ -4,6 +4,7 @@ using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class ChatManager : MonoBehaviourPunCallbacks
 {
@@ -27,43 +28,57 @@ public class ChatManager : MonoBehaviourPunCallbacks
     private bool isChatOpen = false;
     private int unreadCount = 0;
 
-    // เพิ่มส่วนที่ใช้เก็บข้อมูลชื่อผู้เล่นและสี
-    private Dictionary<string, string> userColorMap = new Dictionary<string, string>();
+    private string localPlayerColorHex;
     private bool hasStartedChatting = false;
+
+    private const string CHAT_HISTORY_KEY = "chatHistory";
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     void Start()
     {
         chatPanel.SetActive(false);
         chatNotificationIcon.SetActive(false);
-        noMessageText.SetActive(true); // ข้อความ "ยังไม่มีการเริ่มบทสนทนา"
+        noMessageText.SetActive(true);
         UpdateNotificationText();
+
+        // สุ่มสีให้กับชื่อผู้เล่นตัวเอง (ยกเว้นสีขาว)
+        localPlayerColorHex = GenerateNonWhiteColorHex();
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    public override void OnJoinedRoom()
+    {
+        LoadChatHistoryFromRoomProperties();
+    }
+
+    void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        chatPanel.SetActive(false);
     }
 
     void Update()
     {
+        // ตรวจจับ Enter เฉพาะตอน inputField โฟกัส
         if (isChatOpen && inputField.isFocused && Input.GetKeyDown(KeyCode.Return))
         {
             OnSendButton();
-        }
-
-        // เพิ่มการตรวจสอบเมื่อแป้นพิมพ์ปรากฏขึ้น
-        if (TouchScreenKeyboard.visible)
-        {
-            // ปรับตำแหน่งของ ScrollRect ให้อยู่ในตำแหน่งที่ไม่ถูกบัง
-            scrollRect.verticalNormalizedPosition = 0f; // เลื่อนข้อความขึ้น
         }
     }
 
@@ -81,48 +96,37 @@ public class ChatManager : MonoBehaviourPunCallbacks
 
             photonView.RPC("ReceiveMessage", RpcTarget.All, PhotonNetwork.NickName, rawText);
             inputField.text = "";
-            inputField.ActivateInputField();
 
-            // ลบข้อความที่บอกว่าใครล้างแชท
-            if (messageQueue.Count > 0)
-            {
-                GameObject firstMessage = messageQueue.Peek();
-                if (firstMessage != null && firstMessage.GetComponent<TMP_Text>().text.Contains("ได้ล้างข้อความแชท"))
-                {
-                    Destroy(firstMessage); // ลบข้อความที่บอกว่าใครล้างแชท
-                    messageQueue.Dequeue();
-                    UpdateNoMessageTextVisibility();
-                }
-            }
+#if UNITY_ANDROID || UNITY_IOS
+            inputField.DeactivateInputField(); // ไม่ให้แป้นพิมพ์เด้งเอง
+#endif
         }
     }
 
     [PunRPC]
     void ReceiveMessage(string senderName, string messageText)
     {
-        // เช็คว่าเป็นครั้งแรกของผู้เล่นนี้หรือไม่ ถ้าใช่ให้สุ่มสี
-        if (!userColorMap.ContainsKey(senderName))
+        string finalMessage;
+
+        if (senderName == PhotonNetwork.NickName)
         {
-            userColorMap[senderName] = GetRandomColorHex();
+            finalMessage = $"<b><color={localPlayerColorHex}>{senderName}</color></b>: {messageText}";
         }
-
-        string colorHex = userColorMap[senderName];
-        string coloredName = $"<b><color={colorHex}>{senderName}</color></b>";
-
-        string finalMessage = $"{coloredName}: {messageText}";
+        else
+        {
+            finalMessage = $"<b><color=white>{senderName}</color></b>: {messageText}";
+        }
 
         GameObject msgObj = Instantiate(messagePrefab, messageContent);
         msgObj.GetComponent<TMP_Text>().text = finalMessage;
-
         messageQueue.Enqueue(msgObj);
+
         if (messageQueue.Count > maxMessages)
-        {
             Destroy(messageQueue.Dequeue());
-        }
 
         UpdateNoMessageTextVisibility();
         Canvas.ForceUpdateCanvases();
-        scrollRect.verticalNormalizedPosition = 0f; // เลื่อนข้อความไปที่ด้านล่าง
+        scrollRect.verticalNormalizedPosition = 0f;
 
         if (!isChatOpen)
         {
@@ -131,9 +135,49 @@ public class ChatManager : MonoBehaviourPunCallbacks
             UpdateNotificationText();
         }
 
-        // เมื่อเริ่มการพิมพ์ข้อความครั้งแรก ให้เปลี่ยนสถานะ
         hasStartedChatting = true;
-        noMessageText.SetActive(false); // ซ่อนข้อความ "ยังไม่มีการเริ่มบทสนทนา"
+        noMessageText.SetActive(false);
+
+        SaveMessageToRoomProperties(finalMessage);
+    }
+
+    private void SaveMessageToRoomProperties(string newMessage)
+    {
+        object currentHistoryObj;
+        PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(CHAT_HISTORY_KEY, out currentHistoryObj);
+
+        List<string> history = currentHistoryObj != null
+            ? new List<string>((string[])currentHistoryObj)
+            : new List<string>();
+
+        history.Add(newMessage);
+
+        if (history.Count > maxMessages)
+            history.RemoveAt(0);
+
+        ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
+        {
+            [CHAT_HISTORY_KEY] = history.ToArray()
+        };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+    }
+
+    private void LoadChatHistoryFromRoomProperties()
+    {
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(CHAT_HISTORY_KEY, out object historyObj))
+        {
+            string[] history = (string[])historyObj;
+            foreach (string msg in history)
+            {
+                GameObject msgObj = Instantiate(messagePrefab, messageContent);
+                msgObj.GetComponent<TMP_Text>().text = msg;
+                messageQueue.Enqueue(msgObj);
+            }
+
+            Canvas.ForceUpdateCanvases();
+            scrollRect.verticalNormalizedPosition = 0f;
+            UpdateNoMessageTextVisibility();
+        }
     }
 
     public void ToggleChatPanel()
@@ -146,7 +190,12 @@ public class ChatManager : MonoBehaviourPunCallbacks
             chatNotificationIcon.SetActive(false);
             unreadCount = 0;
             UpdateNotificationText();
+
+#if UNITY_ANDROID || UNITY_IOS
+            inputField.DeactivateInputField(); // ไม่ให้แป้นพิมพ์เด้งเอง
+#else
             inputField.ActivateInputField();
+#endif
             UpdateNoMessageTextVisibility();
         }
     }
@@ -210,7 +259,6 @@ public class ChatManager : MonoBehaviourPunCallbacks
 
     private void UpdateNoMessageTextVisibility()
     {
-        // หากมีข้อความในแชทจะไม่แสดงข้อความ "ยังไม่มีการเริ่มบทสนทนา"
         noMessageText.SetActive(messageQueue.Count == 0 && !hasStartedChatting);
     }
 
@@ -221,8 +269,6 @@ public class ChatManager : MonoBehaviourPunCallbacks
             notificationCountText.text = unreadCount > 0 ? unreadCount.ToString() : "";
         }
     }
-
-    // ========== Clear Chat Feature ==========
 
     public void ShowClearChatConfirmation()
     {
@@ -254,12 +300,22 @@ public class ChatManager : MonoBehaviourPunCallbacks
         msgObj.GetComponent<TMP_Text>().text = $"<i><color=white>{clearedBy} ได้ล้างข้อความแชท</color></i>";
         messageQueue.Enqueue(msgObj);
         scrollRect.verticalNormalizedPosition = 0f;
+
+        ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
+        {
+            [CHAT_HISTORY_KEY] = new string[0]
+        };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
 
-    // ฟังก์ชันสุ่มสี
-    private string GetRandomColorHex()
+    private string GenerateNonWhiteColorHex()
     {
-        Color randomColor = new Color(Random.value, Random.value, Random.value);
+        Color randomColor;
+        do
+        {
+            randomColor = new Color(Random.value, Random.value, Random.value);
+        } while (randomColor.r > 0.9f && randomColor.g > 0.9f && randomColor.b > 0.9f); // หลีกเลี่ยงสีขาว
+
         return $"#{ColorUtility.ToHtmlStringRGB(randomColor)}";
     }
 }
