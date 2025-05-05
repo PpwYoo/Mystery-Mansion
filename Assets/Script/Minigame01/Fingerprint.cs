@@ -33,6 +33,11 @@ public class Fingerprint : MonoBehaviour
     public Image hintFPImageUI;
     public Image[] levelIcons;
 
+    [Header("Level Icons Sprites")]
+    public Sprite completedIcon;   // ด่านที่ผ่านแล้ว
+    public Sprite currentIcon;     // ด่านที่เล่นได้
+    public Sprite lockedIcon;      // ด่านที่ยังล็อกอยู่
+
     [Header("Text")]
     public TMP_Text mapTimerText, questionTimerText, countdownText, answerWrongText;
 
@@ -157,25 +162,40 @@ public class Fingerprint : MonoBehaviour
     }
 
     public void ShowMap()
-    {
-        mapCanvas.SetActive(true);
-        questionCanvas.SetActive(false);
-        answerWrongText.gameObject.SetActive(false);
-        answerCorrectPanel.SetActive(false);
+{
+    mapCanvas.SetActive(true);
+    questionCanvas.SetActive(false);
+    answerWrongText.gameObject.SetActive(false);
+    answerCorrectPanel.SetActive(false);
 
-        for (int i = 0; i < levelIcons.Length; i++)
+    for (int i = 0; i < levelIcons.Length; i++)
+    {
+        Button levelButton = levelIcons[i].GetComponent<Button>();
+        levelButton.onClick.RemoveAllListeners();
+
+        if (i < currentLevel)
         {
-            Button levelButton = levelIcons[i].GetComponent<Button>();
-            levelIcons[i].color = i == currentLevel ? Color.white : Color.gray;
-            if (levelButton != null)
-            {
-                levelButton.interactable = i == currentLevel;
-                levelButton.onClick.RemoveAllListeners();
-                int levelIndex = i;
-                levelButton.onClick.AddListener(() => ShowQuestion(levelIndex));
-            }
+            // ด่านที่เล่นผ่านแล้ว
+            levelIcons[i].sprite = completedIcon;
+            levelButton.interactable = false;
+        }
+        else if (i == currentLevel)
+        {
+            // ด่านปัจจุบัน
+            levelIcons[i].sprite = currentIcon;
+            levelButton.interactable = true;
+
+            int levelIndex = i;
+            levelButton.onClick.AddListener(() => ShowQuestion(levelIndex));
+        }
+        else
+        {
+            // ด่านที่ยังเล่นไม่ได้
+            levelIcons[i].sprite = lockedIcon;
+            levelButton.interactable = false;
         }
     }
+}
 
     public void ShowQuestion(int questionIndex)
     {

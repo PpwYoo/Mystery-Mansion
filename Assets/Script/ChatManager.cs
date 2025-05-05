@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
+using System.Globalization;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
@@ -19,6 +21,15 @@ public class ChatManager : MonoBehaviourPunCallbacks
     public GameObject chatNotificationIcon;
     public TMP_Text notificationCountText;
     public GameObject noMessageText;
+    public Image duplicateWarningImage;
+    public TMP_Text dateText;
+    private string lastMessageDate = "";
+
+    [Header("Scroll Down Button")]
+    public GameObject scrollDownButton;
+    private CanvasGroup scrollButtonCanvasGroup;
+    private Coroutine fadeCoroutine;
+    private bool isScrollButtonVisible = false;
 
     [Header("Clear Chat Confirmation")]
     public GameObject clearChatDialog;
@@ -27,11 +38,15 @@ public class ChatManager : MonoBehaviourPunCallbacks
     private int maxMessages = 100;
     private bool isChatOpen = false;
     private int unreadCount = 0;
-
-    private string localPlayerColorHex;
+    private bool hasSystemMessageUnread = false;
     private bool hasStartedChatting = false;
 
+    private string localPlayerColorHex;
     private const string CHAT_HISTORY_KEY = "chatHistory";
+
+    private Coroutine duplicateWarningCoroutine;
+
+    private bool isUserScrollingManually = false;
 
     void Awake()
     {
@@ -52,19 +67,23 @@ public class ChatManager : MonoBehaviourPunCallbacks
         noMessageText.SetActive(true);
         UpdateNotificationText();
 
-        // สุ่มสีให้กับชื่อผู้เล่นตัวเอง (ยกเว้นสีขาว)
         localPlayerColorHex = GenerateNonWhiteColorHex();
+        duplicateWarningImage.gameObject.SetActive(false);
+
+        scrollButtonCanvasGroup = scrollDownButton.GetComponent<CanvasGroup>();
+        scrollButtonCanvasGroup.alpha = 0;
+        scrollDownButton.SetActive(true);
+
+        UpdateDate();
+
+        scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    public override void OnJoinedRoom()
-    {
-        LoadChatHistoryFromRoomProperties();
-    }
-
     void OnDestroy()
     {
+        scrollRect.onValueChanged.RemoveListener(OnScrollValueChanged);
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
@@ -73,13 +92,138 @@ public class ChatManager : MonoBehaviourPunCallbacks
         chatPanel.SetActive(false);
     }
 
+    void FadeInScrollButton()
+    {
+        if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
+        fadeCoroutine = StartCoroutine(FadeCanvasGroup(scrollButtonCanvasGroup, 0f, 1f, 0.3f));
+        isScrollButtonVisible = true;
+
+        // Play sound for scroll-down button appearance
+        SFXManager.Instance?.PlayArrowButton();  // <-- Added this line for sound effect (appearance)
+    }
+
+    void FadeOutScrollButton()
+    {
+        if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
+        fadeCoroutine = StartCoroutine(FadeCanvasGroup(scrollButtonCanvasGroup, 1f, 0f, 0.3f));
+        isScrollButtonVisible = false;
+
+        SFXManager.Instance?.PlayArrowButton();  // <-- Added this line for sound effect (disappearance)
+    }
+
+    IEnumerator FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration)
+    {
+        float elapsed = 0f;
+        cg.alpha = from;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            cg.alpha = Mathf.Lerp(from, to, elapsed / duration);
+            yield return null;
+        }
+
+        cg.alpha = to;
+    }
+
     void Update()
     {
-        // ตรวจจับ Enter เฉพาะตอน inputField โฟกัส
         if (isChatOpen && inputField.isFocused && Input.GetKeyDown(KeyCode.Return))
         {
             OnSendButton();
         }
+
+        if (isChatOpen && inputField.isFocused && Input.anyKeyDown)
+        {
+            SFXManager.Instance?.PlayTyping();
+        }
+
+        if (scrollRect.content.sizeDelta.y > scrollRect.viewport.rect.height)
+        {
+            bool isAtBottom = scrollRect.verticalNormalizedPosition <= 0.0001f;
+            if (!isAtBottom && !isScrollButtonVisible)
+            {
+                FadeInScrollButton();
+            }
+            else if (isAtBottom && isScrollButtonVisible)
+            {
+                FadeOutScrollButton();
+            }
+        }
+        else if (isScrollButtonVisible)
+        {
+            FadeOutScrollButton();
+        }
+
+        if (System.DateTime.Now.ToString("yyyyMMdd") != lastMessageDate)
+        {
+            UpdateDate(); // อัปเดตวันที่ใหม่
+        }
+    }
+
+    void UpdateDate()
+    {
+        string today = System.DateTime.Now.ToString("dd MMM yyyy", new CultureInfo("en-US")).ToUpper();
+    
+    // Check if the date has changed
+    if (today != lastMessageDate)
+    {
+        dateText.text = today; // Update the date if it's a new day
+        lastMessageDate = today; // Save the current date as the last updated date
+    }
+    }
+
+    public void ScrollToBottom()
+    {
+        Canvas.ForceUpdateCanvases();
+        scrollRect.verticalNormalizedPosition = 0f;
+        isUserScrollingManually = false;
+        FadeOutScrollButton();
+
+        // Play sound when scrolling to the bottom
+        SFXManager.Instance?.PlayArrowButton();  // <-- Added this line for sound effect
+    }
+
+    void OnScrollValueChanged(Vector2 pos)
+    {
+        bool isAtBottom = scrollRect.verticalNormalizedPosition <= 0.01f;
+        isUserScrollingManually = !isAtBottom;
+    }
+
+    public override void OnJoinedRoom()
+    {
+        LoadChatHistoryFromRoomProperties();
+    }
+
+    public void ToggleChatPanel()
+    {
+        isChatOpen = !isChatOpen;
+        chatPanel.SetActive(isChatOpen);
+
+        if (isChatOpen)
+        {
+            SFXManager.Instance?.PlayChatOpen();
+            chatNotificationIcon.SetActive(false);
+            unreadCount = 0;
+            hasSystemMessageUnread = false;
+            UpdateNotificationText();
+
+#if UNITY_ANDROID || UNITY_IOS
+            inputField.DeactivateInputField();
+#else
+            inputField.ActivateInputField();
+#endif
+            UpdateNoMessageTextVisibility();
+        }
+        else
+        {
+            SFXManager.Instance?.PlayChatClose();
+        }
+    }
+
+    public bool isChatPanelOpen()
+    {
+        return chatPanel.activeSelf;
     }
 
     public void OnSendButton()
@@ -90,61 +234,69 @@ public class ChatManager : MonoBehaviourPunCallbacks
         {
             if (HasExcessiveDuplicateCharacters(rawText, 10))
             {
-                Debug.Log("ข้อความมีตัวอักษรหรือสระซ้ำเกิน 10 ตัว");
+                ShowDuplicateWarningImage();
+                SFXManager.Instance?.PlayNotification();
                 return;
             }
 
             photonView.RPC("ReceiveMessage", RpcTarget.All, PhotonNetwork.NickName, rawText);
+            SFXManager.Instance?.PlaySendMessage();
             inputField.text = "";
 
 #if UNITY_ANDROID || UNITY_IOS
-            inputField.DeactivateInputField(); // ไม่ให้แป้นพิมพ์เด้งเอง
+            inputField.DeactivateInputField();
 #endif
         }
     }
 
     [PunRPC]
-    void ReceiveMessage(string senderName, string messageText)
+void ReceiveMessage(string senderName, string messageText)
+{
+    string senderColorHex;
+
+    if (senderName == PhotonNetwork.NickName)
     {
-        string finalMessage;
+        senderColorHex = localPlayerColorHex;
+    }
+    else
+    {
+        senderColorHex = "#000000";
+    }
 
-        if (senderName == PhotonNetwork.NickName)
-        {
-            finalMessage = $"<b><color={localPlayerColorHex}>{senderName}</color></b>: {messageText}";
-        }
-        else
-        {
-            finalMessage = $"<b><color=white>{senderName}</color></b>: {messageText}";
-        }
+    string timeStamp = System.DateTime.Now.ToString("HH:mm");
 
-        GameObject msgObj = Instantiate(messagePrefab, messageContent);
-        msgObj.GetComponent<TMP_Text>().text = finalMessage;
-        messageQueue.Enqueue(msgObj);
+    string finalMessage = $"<b><color={senderColorHex}>{senderName}:</color></b> {messageText} <size=70%><color=#666666>({timeStamp})</color></size>";
 
-        if (messageQueue.Count > maxMessages)
-            Destroy(messageQueue.Dequeue());
+    GameObject msgObj = Instantiate(messagePrefab, messageContent);
+    msgObj.GetComponent<TMP_Text>().text = finalMessage;
+    messageQueue.Enqueue(msgObj);
 
-        UpdateNoMessageTextVisibility();
-        Canvas.ForceUpdateCanvases();
+    if (messageQueue.Count > maxMessages)
+        Destroy(messageQueue.Dequeue());
+
+    UpdateNoMessageTextVisibility();
+    Canvas.ForceUpdateCanvases();
+
+    if (!isUserScrollingManually)
         scrollRect.verticalNormalizedPosition = 0f;
 
-        if (!isChatOpen)
-        {
-            unreadCount++;
-            chatNotificationIcon.SetActive(true);
-            UpdateNotificationText();
-        }
-
-        hasStartedChatting = true;
-        noMessageText.SetActive(false);
-
-        SaveMessageToRoomProperties(finalMessage);
+    if (!isChatOpen)
+    {
+        unreadCount++;
+        chatNotificationIcon.SetActive(true);
+        UpdateNotificationText();
     }
+
+    hasStartedChatting = true;
+    noMessageText.SetActive(false);
+
+    SaveMessageToRoomProperties(finalMessage);
+}
 
     private void SaveMessageToRoomProperties(string newMessage)
     {
-        object currentHistoryObj;
-        PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(CHAT_HISTORY_KEY, out currentHistoryObj);
+        if (!PhotonNetwork.InRoom) return;
+        PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(CHAT_HISTORY_KEY, out object currentHistoryObj);
 
         List<string> history = currentHistoryObj != null
             ? new List<string>((string[])currentHistoryObj)
@@ -180,29 +332,67 @@ public class ChatManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void ToggleChatPanel()
+    public void ShowClearChatConfirmation()
     {
-        isChatOpen = !isChatOpen;
-        chatPanel.SetActive(isChatOpen);
+        SFXManager.Instance?.PlayClearChat();
+        clearChatDialog.SetActive(true);
+    }
 
-        if (isChatOpen)
+    public void CancelClearChat()
+    {
+        SFXManager.Instance?.PlayCancelClear();
+        clearChatDialog.SetActive(false);
+    }
+
+    public void ConfirmClearChat()
+    {
+        SFXManager.Instance?.PlayConfirmClear();
+        photonView.RPC("ClearAllMessagesRPC", RpcTarget.All, PhotonNetwork.NickName);
+        clearChatDialog.SetActive(false);
+    }
+
+    [PunRPC]
+    void ClearAllMessagesRPC(string clearedBy)
+    {
+        foreach (Transform child in messageContent)
         {
-            chatNotificationIcon.SetActive(false);
-            unreadCount = 0;
-            UpdateNotificationText();
+            Destroy(child.gameObject);
+        }
+        messageQueue.Clear();
+        UpdateNoMessageTextVisibility();
 
-#if UNITY_ANDROID || UNITY_IOS
-            inputField.DeactivateInputField(); // ไม่ให้แป้นพิมพ์เด้งเอง
-#else
-            inputField.ActivateInputField();
-#endif
-            UpdateNoMessageTextVisibility();
+        GameObject msgObj = Instantiate(messagePrefab, messageContent);
+        msgObj.GetComponent<TMP_Text>().text = $"<i><color=#666666>\"{clearedBy}\" ได้ล้างข้อความแชท</color></i>";
+        messageQueue.Enqueue(msgObj);
+        scrollRect.verticalNormalizedPosition = 0f;
+
+        ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
+        {
+            [CHAT_HISTORY_KEY] = new string[0]
+        };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+
+        if (!isChatOpen)
+        {
+            hasSystemMessageUnread = true;
+            chatNotificationIcon.SetActive(true);
+            UpdateNotificationText();
         }
     }
 
-    public bool isChatPanelOpen()
+    private void ShowDuplicateWarningImage()
     {
-        return chatPanel.activeSelf;
+        if (duplicateWarningCoroutine != null)
+            StopCoroutine(duplicateWarningCoroutine);
+
+        duplicateWarningCoroutine = StartCoroutine(ShowDuplicateImageRoutine());
+    }
+
+    private IEnumerator ShowDuplicateImageRoutine()
+    {
+        duplicateWarningImage.gameObject.SetActive(true);
+        yield return new WaitForSeconds(3f);
+        duplicateWarningImage.gameObject.SetActive(false);
     }
 
     private int CountThaiBaseCharacters(string input)
@@ -218,9 +408,7 @@ public class ChatManager : MonoBehaviourPunCallbacks
         foreach (char c in input)
         {
             if (!ignoreChars.Contains(c) && !char.IsWhiteSpace(c))
-            {
                 count++;
-            }
         }
         return count;
     }
@@ -244,9 +432,7 @@ public class ChatManager : MonoBehaviourPunCallbacks
             {
                 characterCount[c]++;
                 if (characterCount[c] > maxDuplicates)
-                {
                     return true;
-                }
             }
             else
             {
@@ -266,46 +452,11 @@ public class ChatManager : MonoBehaviourPunCallbacks
     {
         if (notificationCountText != null)
         {
-            notificationCountText.text = unreadCount > 0 ? unreadCount.ToString() : "";
+            if (hasSystemMessageUnread)
+                notificationCountText.text = "!";
+            else
+                notificationCountText.text = unreadCount > 0 ? unreadCount.ToString() : "";
         }
-    }
-
-    public void ShowClearChatConfirmation()
-    {
-        clearChatDialog.SetActive(true);
-    }
-
-    public void CancelClearChat()
-    {
-        clearChatDialog.SetActive(false);
-    }
-
-    public void ConfirmClearChat()
-    {
-        photonView.RPC("ClearAllMessagesRPC", RpcTarget.All, PhotonNetwork.NickName);
-        clearChatDialog.SetActive(false);
-    }
-
-    [PunRPC]
-    void ClearAllMessagesRPC(string clearedBy)
-    {
-        foreach (Transform child in messageContent)
-        {
-            Destroy(child.gameObject);
-        }
-        messageQueue.Clear();
-        UpdateNoMessageTextVisibility();
-
-        GameObject msgObj = Instantiate(messagePrefab, messageContent);
-        msgObj.GetComponent<TMP_Text>().text = $"<i><color=white>{clearedBy} ได้ล้างข้อความแชท</color></i>";
-        messageQueue.Enqueue(msgObj);
-        scrollRect.verticalNormalizedPosition = 0f;
-
-        ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable
-        {
-            [CHAT_HISTORY_KEY] = new string[0]
-        };
-        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
 
     private string GenerateNonWhiteColorHex()
@@ -314,7 +465,7 @@ public class ChatManager : MonoBehaviourPunCallbacks
         do
         {
             randomColor = new Color(Random.value, Random.value, Random.value);
-        } while (randomColor.r > 0.9f && randomColor.g > 0.9f && randomColor.b > 0.9f); // หลีกเลี่ยงสีขาว
+        } while (randomColor.r > 0.9f && randomColor.g > 0.9f && randomColor.b > 0.9f);
 
         return $"#{ColorUtility.ToHtmlStringRGB(randomColor)}";
     }
