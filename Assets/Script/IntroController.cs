@@ -1,71 +1,73 @@
 using UnityEngine;
-using UnityEngine.Video;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
 
 public class IntroController : MonoBehaviour
 {
-    public VideoPlayer intro1Player;
-    public VideoPlayer intro2Player;
-    public Image fadeImage; // Image ที่จะใช้สำหรับ fade effect
+    public GameObject intro1Object;
+    public GameObject intro2Object;
+    public GameObject fadePanel;
+    public float intro1Duration = 6f;
+    public float intro2Duration = 6f;
     public float fadeDuration = 1f;
 
-    private void Start()
+    private CanvasGroup fadeCanvasGroup;
+
+    void Start()
     {
-        intro1Player.loopPointReached += OnIntro1End; // เมื่อ Intro1 จบ
-        intro2Player.gameObject.SetActive(false); // เริ่มต้น Intro2 ไว้ไม่ให้แสดง
-        fadeImage.color = new Color(0, 0, 0, 0); // เริ่มต้น Fade เป็นโปร่งใส
+        fadeCanvasGroup = fadePanel.GetComponent<CanvasGroup>();
+        fadePanel.SetActive(false);
+        intro1Object.SetActive(true);
+        intro2Object.SetActive(false);
+        Invoke(nameof(FadeToIntro2), intro1Duration);
     }
 
-    private void OnIntro1End(VideoPlayer vp)
+    void FadeToIntro2()
     {
-        StartCoroutine(FadeToBlackAndPlayIntro2());
-    }
-
-    private IEnumerator FadeToBlackAndPlayIntro2()
-    {
-        // Fade to black
-        yield return StartCoroutine(Fade(1f));
-        
-        // หลังจาก fade เสร็จให้เล่น Intro2
-        intro2Player.gameObject.SetActive(true);
-        intro2Player.Play();
-
-        // Fade จากดำเป็นโปร่งใส
-        yield return StartCoroutine(Fade(0f));
-        
-        // รอจนกว่า Intro2 จะจบ
-        intro2Player.loopPointReached += OnIntro2End;
-    }
-
-    private void OnIntro2End(VideoPlayer vp)
-    {
-        StartCoroutine(FadeToBlackAndLoadScene());
-    }
-
-    private IEnumerator FadeToBlackAndLoadScene()
-    {
-        // Fade to black ก่อนเปลี่ยน Scene
-        yield return StartCoroutine(Fade(1f));
-
-        // เมื่อ fade เสร็จ ให้โหลด NameScene
-        SceneManager.LoadScene("NameScene");
-    }
-
-    private IEnumerator Fade(float targetAlpha)
-    {
-        float startAlpha = fadeImage.color.a;
-        float timeElapsed = 0f;
-
-        while (timeElapsed < fadeDuration)
+        StartCoroutine(FadeTransition(() =>
         {
-            float alpha = Mathf.Lerp(startAlpha, targetAlpha, timeElapsed / fadeDuration);
-            fadeImage.color = new Color(0, 0, 0, alpha);
-            timeElapsed += Time.deltaTime;
+            intro1Object.SetActive(false);
+            intro2Object.SetActive(true);
+            Invoke(nameof(FadeOutAfterIntro2), intro2Duration);
+        }));
+    }
+
+    void FadeOutAfterIntro2()
+    {
+        StartCoroutine(FadeTransition(LoadNextScene));
+    }
+
+    IEnumerator FadeTransition(System.Action onFadeComplete)
+    {
+        fadePanel.SetActive(true);
+        fadeCanvasGroup.alpha = 0f;
+
+        // Fade in
+        float t = 0f;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadeCanvasGroup.alpha = Mathf.Lerp(0f, 1f, t / fadeDuration);
             yield return null;
         }
 
-        fadeImage.color = new Color(0, 0, 0, targetAlpha);
+        onFadeComplete?.Invoke();
+
+        // Fade out
+        t = 0f;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadeCanvasGroup.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            yield return null;
+        }
+
+        fadePanel.SetActive(false);
+    }
+
+    void LoadNextScene()
+    {
+        SceneManager.LoadScene("NameScene");
     }
 }
