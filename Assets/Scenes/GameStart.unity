@@ -10184,7 +10184,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 583419801119048bea01c51625034594, type: 3}
   timerText: {fileID: 340364142}
   countdownTimes:
-  - 60
+  - 15
   - 25
   captainText: {fileID: 300622045}
   voteResultsPanel: {fileID: 104795885}
@@ -11454,7 +11454,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0E2A\u0E19\u0E17\u0E19\u0E32\u0E01\u0E31\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E2B\u0E32\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E20\u0E32\u0E23\u0E01\u0E34\u0E08"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3f36c850c2c884f2195d35c688f46611, type: 2}
   m_sharedMaterial: {fileID: -7299357942097702749, guid: 3f36c850c2c884f2195d35c688f46611, type: 2}

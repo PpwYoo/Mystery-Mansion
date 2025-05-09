@@ -15,7 +15,7 @@ public class FindTheWaySetting : MonoBehaviour
     [Header("Player & Goal")]
     public RectTransform playerUI; public RectTransform goalImage; public RectTransform gridPanelRectTransform;
 
-    private float totalGameTime = 120f;
+    private float totalGameTime = 30f;
     private float timeReductionMultiplier = 1f; // ผู้เล่นที่ถูกคนร้ายเลือก เวลาจะลดเร็วกว่าปกติ
     private int currentRound = 0;
     private bool isGameActive = false;
