@@ -6,6 +6,10 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using System.Globalization;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+using System.Runtime.InteropServices;
+#endif
+
 public class YourName : MonoBehaviour
 {
     [System.Serializable]
@@ -32,6 +36,11 @@ public class YourName : MonoBehaviour
     public AudioClip signNameSound;
 
     private AudioManager audioManager;
+
+    #if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")]
+    private static extern string ShowPrompt(string message);
+    #endif
 
     void Start()
 {
@@ -66,8 +75,22 @@ private char ValidateCharacterInput(string text, int charIndex, char addedChar)
             storyText.text = introSteps[step].storyText;
             buttonLabel.text = introSteps[step].buttonText;
 
-            nameInputField.text = "";
-            nameInputField.gameObject.SetActive(introSteps[step].isNameInputStep);
+            if (introSteps[step].isNameInputStep)
+            {
+                #if UNITY_WEBGL && !UNITY_EDITOR
+                    string result = ShowPrompt("กรุณาใส่ชื่อของคุณ:");
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        nameInputField.text = result;
+                    }
+                #endif
+
+                nameInputField.gameObject.SetActive(true);
+            }
+            else
+            {
+                nameInputField.gameObject.SetActive(false);
+            }
         }
     }
 

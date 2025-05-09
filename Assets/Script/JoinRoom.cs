@@ -6,6 +6,10 @@ using Photon.Realtime;
 using UnityEngine.UI;
 using TMPro;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+using System.Runtime.InteropServices;
+#endif
+
 public class JoinRoom : MonoBehaviourPunCallbacks
 {
     public TMP_InputField joinRoomInputField;
@@ -24,6 +28,11 @@ public class JoinRoom : MonoBehaviourPunCallbacks
     public AudioClip joinRoomSound;
 
     private AudioManager audioManager;
+
+    #if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")]
+    private static extern string ShowPrompt(string message);
+    #endif
 
     private void Start()
     {
@@ -52,6 +61,14 @@ public class JoinRoom : MonoBehaviourPunCallbacks
         {
             audioManager.PlaySFX(showJoinRoomInputSound);
         }
+
+        #if UNITY_WEBGL && !UNITY_EDITOR
+            string result = ShowPrompt("กรอกหมายเลยห้อง:");
+            if (!string.IsNullOrEmpty(result))
+            {
+                joinRoomInputField.text = result;
+            }
+        #endif
 
         createRoomButton.SetActive(false);
         joinRoomButton.SetActive(false);

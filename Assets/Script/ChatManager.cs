@@ -8,6 +8,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+using System.Runtime.InteropServices;
+#endif
+
 public class ChatManager : MonoBehaviourPunCallbacks
 {
     public static ChatManager Instance;
@@ -47,6 +51,11 @@ public class ChatManager : MonoBehaviourPunCallbacks
     private Coroutine duplicateWarningCoroutine;
 
     private bool isUserScrollingManually = false;
+
+    #if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")]
+    private static extern string ShowPrompt(string message);
+    #endif
 
     void Awake()
     {
@@ -468,5 +477,16 @@ void ReceiveMessage(string senderName, string messageText)
         } while (randomColor.r > 0.9f && randomColor.g > 0.9f && randomColor.b > 0.9f);
 
         return $"#{ColorUtility.ToHtmlStringRGB(randomColor)}";
+    }
+
+    public void OnInputFieldSelected()
+    {
+        #if UNITY_WEBGL && !UNITY_EDITOR
+        string result = ShowPrompt("");
+        if (!string.IsNullOrEmpty(result))
+        {
+            inputField.text = result;
+        }
+        #endif
     }
 }
