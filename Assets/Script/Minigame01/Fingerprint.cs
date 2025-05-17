@@ -47,7 +47,7 @@ public class Fingerprint : MonoBehaviour
     public delegate void MissionCompletedHandler();
     public event MissionCompletedHandler OnMissionCompleted;
 
-    private float timer = 30f;
+    private float timer = 90f;
     private bool isTimerRunning = false;
     private QuestionData currentQuestion;
     private int selectedAnswerIndex = -1;
@@ -135,7 +135,7 @@ public class Fingerprint : MonoBehaviour
         if (!isTimerRunning)
         {
             isTimerRunning = true;
-            timer = 30f;
+            timer = 90f;
         }
     }
 
